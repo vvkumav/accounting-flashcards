@@ -367,6 +367,17 @@
 <!-- ===== Frequency ===== -->
 <div class="freq-view" id="freqView">
   <div class="freq-level-selector" id="freqSelector">
+    <div class="limit-bar">
+      <span>出題数：</span>
+      <select class="limit-select" id="freqLimitSelect" onchange="setFreqLimit(this.value)">
+        <option value="0">すべて</option>
+        <option value="10">10問</option>
+        <option value="20">20問</option>
+        <option value="30">30問</option>
+        <option value="50">50問</option>
+        <option value="100">100問</option>
+      </select>
+    </div>
     <div class="freq-level-card lv1" onclick="startFreqSession(1)">
       <div class="freq-level-info">
         <div class="freq-level-title">★★★ 頻出</div>
