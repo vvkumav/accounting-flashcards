@@ -196,7 +196,7 @@
   <div class="share-modal">
     <button class="share-close-btn" onclick="closeShareModal()">✕</button>
     <h2>📱 スマホで開く</h2>
-    <p class="desc">同じWi-Fiに接続したスマホ・タブレットのカメラでQRコードを読み取るか、下のリンクを入力してください。</p>
+    <p class="desc">スマホ・タブレットのカメラでQRコードを読み取るか、下のリンクを開いてください。</p>
     <img class="qr" id="shareQrImg" alt="QRコード" src="">
     <div class="share-link-box">
       <input class="share-link-input" id="shareLinkInput" type="text" readonly onclick="this.select()">
@@ -1067,7 +1067,7 @@ function openShareModal() {
   qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(url);
   copiedMsg.textContent = '';
   if (noteEl) {
-    noteEl.textContent = '※ スマホとPCが同じWi-Fiに接続されている必要があります。リンクが開けない場合は、PCのIPアドレスが変わっていないか確認してください。';
+    noteEl.textContent = '※ インターネット公開URLです。どこからでも開けます（PCの起動は不要）。';
   }
   document.getElementById('shareOverlay').classList.add('open');
 }
