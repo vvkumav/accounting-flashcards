@@ -1438,6 +1438,7 @@ function renderQuiz() {
   document.getElementById('qFeedback').textContent = '';
   document.getElementById('qFeedback').className = 'quiz-feedback';
   document.getElementById('qNote').style.display = 'none';
+  hideWordDetail('qDetail');
   if (!qDeck.length) {
     document.getElementById('qQuestion').textContent = '該当カードなし';
     document.getElementById('qChoices').innerHTML = '';
@@ -1506,12 +1507,6 @@ function selectChoice(btn, correctCard, selectedCard, dir) {
   const fb = document.getElementById('qFeedback');
   fb.textContent = ok ? '正解！' : '不正解';
   fb.className = 'quiz-feedback ' + (ok ? 'ok' : 'ng');
-  // Show note on answer
-  if (correctCard.note) {
-    const noteEl = document.getElementById('qNote');
-    noteEl.textContent = correctCard.note;
-    noteEl.style.display = 'block';
-  }
   if (ok) qCorrect++; else qWrong++;
   updateQStats();
   document.getElementById('qBtnNext').style.display = 'inline-block';
