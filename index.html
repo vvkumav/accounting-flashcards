@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文会計 単語帳</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f4f8; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; padding: 20px;
+  }
+  h1 { font-size: 1.4rem; color: #2d3748; margin-bottom: 4px; text-align: center; }
+  .subtitle { color: #718096; font-size: 0.85rem; margin-bottom: 14px; text-align: center; }
+
+  /* Share button & modal */
+  .share-btn { position: fixed; top: 14px; right: 14px; padding: 8px 14px; border-radius: 20px; border: 2px solid #9f7aea; background: #fff; color: #553c9a; font-weight: bold; font-size: 0.78rem; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 50; }
+  .share-btn:hover { background: #9f7aea; color: #fff; }
+  .share-overlay { display: none; position: fixed; inset: 0; background: rgba(45,55,72,0.55); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .share-overlay.open { display: flex; }
+  .share-modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.25); position: relative; }
+  .share-modal h2 { font-size: 1.05rem; color: #2d3748; margin-bottom: 6px; }
+  .share-modal p.desc { font-size: 0.78rem; color: #718096; margin-bottom: 14px; line-height: 1.5; }
+  .share-modal img.qr { width: 220px; height: 220px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 14px; }
+  .share-link-box { display: flex; gap: 6px; margin-bottom: 6px; }
+  .share-link-input { flex: 1; padding: 8px 10px; border-radius: 8px; border: 2px solid #cbd5e0; font-size: 0.75rem; color: #2d3748; background: #f7fafc; }
+  .share-copy-btn { padding: 8px 12px; border-radius: 8px; border: none; background: #4299e1; color: #fff; font-weight: bold; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+  .share-copy-btn:hover { background: #3182ce; }
+  .share-copied { font-size: 0.72rem; color: #38a169; font-weight: bold; min-height: 1.2em; margin-bottom: 6px; }
+  .share-close-btn { position: absolute; top: 10px; right: 12px; border: none; background: transparent; font-size: 1.2rem; color: #a0aec0; cursor: pointer; line-height: 1; }
+  .share-close-btn:hover { color: #4a5568; }
+  .share-note { font-size: 0.7rem; color: #a0aec0; margin-top: 6px; line-height: 1.4; text-align: left; }
+
+  /* Mode tabs */
+  .mode-bar { display: flex; gap: 0; margin-bottom: 14px; border-radius: 12px; overflow: hidden; border: 2px solid #9f7aea; flex-wrap: wrap; }
+  .mode-btn { padding: 8px 14px; border: none; background: #fff; cursor: pointer; font-size: 0.8rem; color: #553c9a; font-weight: bold; transition: all 0.2s; }
+  .mode-btn + .mode-btn { border-left: 2px solid #9f7aea; }
+  .mode-btn.active { background: #9f7aea; color: #fff; }
+
+  /* Sub toggle (dir/quiz dir) */
+  .sub-toggle { display: flex; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 2px solid #4299e1; }
+  .sub-btn { padding: 6px 16px; border: none; background: #fff; cursor: pointer; font-size: 0.8rem; color: #2b6cb0; font-weight: bold; transition: all 0.2s; }
+  .sub-btn + .sub-btn { border-left: 2px solid #4299e1; }
+  .sub-btn.active { background: #4299e1; color: #fff; }
+
+  /* Filter bar */
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; max-width: 700px; width: 100%; }
+  .filter-btn { padding: 5px 13px; border-radius: 20px; border: 2px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 0.8rem; color: #4a5568; transition: all 0.2s; }
+  .filter-btn.active { background: #4299e1; border-color: #4299e1; color: #fff; font-weight: bold; }
+
+  /* Progress */
+  .progress-wrap { width: 100%; max-width: 480px; margin-bottom: 10px; }
+  .progress-bar { background: #e2e8f0; border-radius: 8px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 8px; transition: width 0.3s; background: #48bb78; }
+  .progress-text { font-size: 0.8rem; color: #718096; text-align: right; margin-top: 4px; }
+
+  /* Stats */
+  .stats { display: flex; gap: 16px; font-size: 0.82rem; color: #718096; margin-bottom: 14px; }
+  .stat { text-align: center; }
+  .stat strong { display: block; font-size: 1.1rem; color: #2d3748; }
+
+  /* Flashcard */
+  .card-area { perspective: 1200px; width: 100%; max-width: 480px; margin-bottom: 14px; }
+  .card { width: 100%; min-height: 230px; position: relative; transform-style: preserve-3d; transition: transform 0.5s ease; cursor: pointer; }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0; border-radius: 16px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 24px 22px; backface-visibility: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.12); min-height: 230px;
+  }
+  .card-front { background: #fff; }
+  .card-back { background: #ebf8ff; transform: rotateY(180deg); }
+  .card-category { font-size: 0.72rem; font-weight: bold; letter-spacing: 1px; color: #a0aec0; margin-bottom: 10px; }
+  .card-main { font-size: 1.35rem; font-weight: bold; color: #2d3748; text-align: center; line-height: 1.4; margin-bottom: 6px; }
+  .card-sub { font-size: 0.82rem; color: #718096; text-align: center; font-style: italic; }
+  .card-hint { font-size: 0.74rem; color: #b794f4; margin-top: 12px; }
+  .card-back .card-main { font-size: 1.45rem; color: #2b6cb0; }
+  .card-back .card-sub { color: #4a5568; font-style: normal; }
+  .card-note { margin-top: 8px; padding: 6px 11px; background: #fefce8; border-left: 3px solid #f6ad55; border-radius: 6px; font-size: 0.76rem; color: #744210; text-align: left; line-height: 1.5; max-width: 100%; }
+  .card-note-hint { margin-top: 7px; padding: 5px 10px; background: #fffbeb; border: 1px dashed #f6ad55; border-radius: 6px; font-size: 0.74rem; color: #92400e; text-align: center; line-height: 1.5; max-width: 100%; }
+  .freq-badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; color: #fff; margin-top: 8px; }
+
+  /* Controls */
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+  .btn { padding: 9px 20px; border-radius: 10px; border: none; font-size: 0.88rem; cursor: pointer; font-weight: bold; transition: transform 0.1s, opacity 0.2s; }
+  .btn:active { transform: scale(0.96); }
+  .btn-prev { background: #e2e8f0; color: #4a5568; }
+  .btn-next { background: #4299e1; color: #fff; }
+  .btn-shuffle { background: #ed8936; color: #fff; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn-ok { background: #48bb78; color: #fff; }
+  .btn-ng { background: #fc8181; color: #fff; }
+  .result-btns { display: flex; gap: 10px; margin-bottom: 14px; }
+
+  /* Input mode */
+  .input-card { width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); padding: 22px; margin-bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .input-question { font-size: 1.3rem; font-weight: bold; color: #2d3748; text-align: center; line-height: 1.4; }
+  .input-qsub { font-size: 0.82rem; color: #718096; font-style: italic; }
+  .input-field { width: 100%; padding: 10px 14px; border: 2px solid #cbd5e0; border-radius: 10px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+  .input-field:focus { border-color: #9f7aea; }
+  .input-field.correct { border-color: #48bb78; background: #f0fff4; }
+  .input-field.incorrect { border-color: #fc8181; background: #fff5f5; }
+  .input-feedback { font-size: 0.95rem; font-weight: bold; text-align: center; min-height: 1.4em; }
+  .input-feedback.ok { color: #38a169; }
+  .input-feedback.ng { color: #e53e3e; }
+  .input-answer { font-size: 0.85rem; color: #4a5568; text-align: center; line-height: 1.6; }
+  .btn-check { background: #9f7aea; color: #fff; }
+  .btn-skip { background: #e2e8f0; color: #4a5568; }
+  .dir-note { font-size: 0.78rem; color: #718096; margin-bottom: 8px; text-align: center; }
+  .limit-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.82rem; color: #4a5568; }
+  .limit-select { padding: 4px 10px; border-radius: 8px; border: 2px solid #cbd5e0; background: #fff; font-size: 0.82rem; color: #2d3748; font-weight: bold; cursor: pointer; outline: none; }
+  .limit-select:focus { border-color: #9f7aea; }
+  .btn-review { background: #fff; border: 2px solid #e2e8f0; color: #718096; font-size: 0.82rem; padding: 7px 16px; }
+  .btn-review.in-review { border-color: #fc8181; color: #c53030; background: #fff5f5; }
+
+  /* ===== Quiz ===== */
+  .quiz-view { width: 100%; max-width: 520px; display: none; flex-direction: column; align-items: center; }
+  .quiz-view.active { display: flex; }
+  .quiz-card { width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); padding: 24px 22px; margin-bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .quiz-question { font-size: 1.25rem; font-weight: bold; color: #2d3748; text-align: center; line-height: 1.5; }
+  .quiz-qsub { font-size: 0.82rem; color: #718096; font-style: italic; }
+  .quiz-choices { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 4px; }
+  .quiz-choice {
+    width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #cbd5e0;
+    background: #fff; cursor: pointer; font-size: 0.92rem; color: #2d3748; font-weight: 500;
+    text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 1.4;
+  }
+  .quiz-choice:hover:not(:disabled) { border-color: #9f7aea; background: #faf5ff; }
+  .quiz-choice.selected-correct { border-color: #48bb78; background: #f0fff4; color: #276749; }
+  .quiz-choice.selected-wrong { border-color: #fc8181; background: #fff5f5; color: #c53030; }
+  .quiz-choice.reveal-correct { border-color: #48bb78; background: #f0fff4; color: #276749; }
+  .quiz-choice:disabled { cursor: default; }
+  .quiz-feedback { font-size: 0.95rem; font-weight: bold; text-align: center; min-height: 1.4em; }
+  .quiz-feedback.ok { color: #38a169; }
+  .quiz-feedback.ng { color: #e53e3e; }
+  .quiz-note { margin-top: 4px; padding: 6px 10px; background: #fefce8; border-left: 3px solid #f6ad55; border-radius: 6px; font-size: 0.76rem; color: #744210; text-align: left; line-height: 1.5; width: 100%; display: none; }
+
+  /* ===== Frequency tab ===== */
+  .freq-view { width: 100%; max-width: 560px; display: none; flex-direction: column; align-items: center; }
+  .freq-view.active { display: flex; }
+  .freq-level-selector { display: flex; flex-direction: column; gap: 14px; width: 100%; margin-bottom: 6px; }
+  .freq-level-card { border-radius: 16px; padding: 20px 24px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 3px 14px rgba(0,0,0,0.10); transition: transform 0.15s, box-shadow 0.15s; border: 3px solid transparent; }
+  .freq-level-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.14); }
+  .freq-level-card.lv1 { background: linear-gradient(135deg, #fff5f5, #fed7d7); }
+  .freq-level-card.lv2 { background: linear-gradient(135deg, #fffff0, #fefcbf); }
+  .freq-level-card.lv3 { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+  .freq-level-card.lv-all { background: linear-gradient(135deg, #ebf8ff, #bee3f8); }
+  .freq-level-info { display: flex; flex-direction: column; gap: 4px; }
+  .freq-level-title { font-size: 1.1rem; font-weight: bold; }
+  .freq-level-card.lv1 .freq-level-title { color: #c53030; }
+  .freq-level-card.lv2 .freq-level-title { color: #b7791f; }
+  .freq-level-card.lv3 .freq-level-title { color: #276749; }
+  .freq-level-card.lv-all .freq-level-title { color: #2b6cb0; }
+  .freq-level-desc { font-size: 0.8rem; color: #718096; }
+  .freq-level-count { font-size: 1.6rem; font-weight: bold; opacity: 0.7; }
+  .freq-session { width: 100%; display: none; flex-direction: column; align-items: center; }
+  .freq-session.active { display: flex; }
+  .freq-back-btn { align-self: flex-start; margin-bottom: 12px; padding: 6px 14px; border-radius: 8px; border: none; background: #e2e8f0; color: #4a5568; cursor: pointer; font-size: 0.82rem; font-weight: bold; }
+  .freq-header { font-size: 1rem; font-weight: bold; color: #4a5568; margin-bottom: 12px; align-self: flex-start; }
+
+  /* List view */
+  .list-view { width: 100%; max-width: 700px; display: none; }
+  .list-view.active { display: block; }
+  .list-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .list-table th { background: #4299e1; color: #fff; padding: 10px 14px; text-align: left; font-size: 0.85rem; }
+  .list-table td { padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #4a5568; }
+  .list-table tr:last-child td { border-bottom: none; }
+  .list-table tr:hover td { background: #ebf8ff; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; color: #fff; }
+
+  .flashcard-view { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+  .flashcard-view.hidden { display: none; }
+  .input-view { width: 100%; max-width: 480px; display: none; flex-direction: column; align-items: center; }
+  .input-view.active { display: flex; }
+
+  .card-unit { font-size: 0.72rem; color: #a0aec0; margin-top: 5px; }
+
+  @media (max-width: 520px) {
+    .card-main { font-size: 1.05rem; }
+    .input-question { font-size: 1.05rem; }
+    .mode-btn { padding: 7px 9px; font-size: 0.74rem; }
+    .quiz-question { font-size: 1rem; }
+    .quiz-choice { font-size: 0.84rem; }
+  }
+</style>
+</head>
+<body>
+
+<button class="share-btn" onclick="openShareModal()">📱 スマホで開く</button>
+
+<h1>英文会計 単語帳</h1>
+<p class="subtitle">CEEAK 英文会計パスポート — 勘定科目一覧</p>
+
+<div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShareModal()">
+  <div class="share-modal">
+    <button class="share-close-btn" onclick="closeShareModal()">✕</button>
+    <h2>📱 スマホで開く</h2>
+    <p class="desc">同じWi-Fiに接続したスマホ・タブレットのカメラでQRコードを読み取るか、下のリンクを入力してください。</p>
+    <img class="qr" id="shareQrImg" alt="QRコード" src="">
+    <div class="share-link-box">
+      <input class="share-link-input" id="shareLinkInput" type="text" readonly onclick="this.select()">
+      <button class="share-copy-btn" onclick="copyShareLink()">コピー</button>
+    </div>
+    <div class="share-copied" id="shareCopiedMsg"></div>
+    <p class="share-note" id="shareNote"></p>
+  </div>
+</div>
+
+<div class="mode-bar">
+  <button class="mode-btn active" onclick="setMode('flash')">カード学習</button>
+  <button class="mode-btn" onclick="setMode('input')">入力問題</button>
+  <button class="mode-btn" onclick="setMode('quiz')">四択問題</button>
+  <button class="mode-btn" onclick="setMode('freq')">頻度別</button>
+  <button class="mode-btn" onclick="setMode('list')">一覧</button>
+</div>
+
+<div class="filter-bar" id="filterBar">
+  <button class="filter-btn active" onclick="setFilter('all',event)">すべて</button>
+  <button class="filter-btn" onclick="setFilter('BS-Assets',event)">資産 (B/S)</button>
+  <button class="filter-btn" onclick="setFilter('BS-Liabilities',event)">負債 (B/S)</button>
+  <button class="filter-btn" onclick="setFilter('BS-Equity',event)">資本 (B/S)</button>
+  <button class="filter-btn" onclick="setFilter('IS-Revenue',event)">収益 (I/S)</button>
+  <button class="filter-btn" onclick="setFilter('IS-Expenses',event)">費用 (I/S)</button>
+  <button class="filter-btn" onclick="setFilter('IS-Gains',event)">利得/損失 (I/S)</button>
+  <button class="filter-btn" onclick="setFilter('復習',event)">復習リスト</button>
+  <button class="filter-btn" onclick="setFilter('FinStmt',event)">財務諸表</button>
+  <button class="filter-btn" onclick="setFilter('Concept',event)">会計概念</button>
+  <button class="filter-btn" onclick="setFilter('Method',event)">会計方法</button>
+  <button class="filter-btn" onclick="setFilter('Trans',event)">取引・仕訳</button>
+  <button class="filter-btn" onclick="setFilter('Org',event)">組織・制度</button>
+  <button class="filter-btn" onclick="setFilter('Ratio',event)">財務指標</button>
+</div>
+
+<!-- ===== Flashcard ===== -->
+<div class="flashcard-view" id="flashView">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText"></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><strong id="statCorrect">0</strong>正解</div>
+    <div class="stat"><strong id="statWrong">0</strong>不正解</div>
+    <div class="stat"><strong id="statRemain">0</strong>残り</div>
+  </div>
+  <div class="card-area">
+    <div class="card" id="card" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="card-category" id="cardCategory"></div>
+        <div class="card-main" id="cardFrontMain"></div>
+        <div class="card-sub" id="cardFrontSub"></div>
+        <div class="card-note-hint" id="cardFrontNote" style="display:none"></div>
+        <div class="card-hint">タップして答えを確認</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-category" id="cardCategoryBack"></div>
+        <div class="card-main" id="cardBackMain"></div>
+        <div class="card-sub" id="cardBackSub"></div>
+        <div class="card-note" id="cardNote" style="display:none"></div>
+        <div class="card-unit" id="cardUnit" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div class="result-btns" id="resultBtns" style="display:none">
+    <button class="btn btn-ng" onclick="markResult(false)">✗ 覚えてない</button>
+    <button class="btn btn-ok" onclick="markResult(true)">✓ 覚えた</button>
+  </div>
+  <div style="margin-bottom:12px;display:flex;justify-content:center;">
+    <button class="btn btn-review" id="flashReviewBtn" style="display:none" onclick="toggleReview('flash')"></button>
+  </div>
+  <div class="controls">
+    <button class="btn btn-prev" id="btnPrev" onclick="prevCard()">◀ 前へ</button>
+    <button class="btn btn-shuffle" onclick="shuffleFlash()">シャッフル</button>
+    <button class="btn btn-next" id="btnNext" onclick="nextCard()">次へ ▶</button>
+  </div>
+</div>
+
+<!-- ===== Input ===== -->
+<div class="input-view" id="inputView">
+  <div class="sub-toggle">
+    <button class="sub-btn active" id="inputDirJaEn" onclick="setInputDir('ja-en')">日→英（英語で回答）</button>
+    <button class="sub-btn" id="inputDirEnJa" onclick="setInputDir('en-ja')">英→日（日本語で回答）</button>
+  </div>
+  <div class="dir-note" id="inputDirNote">日本語を見て英語を入力してください</div>
+  <div class="limit-bar">
+    <span>出題数：</span>
+    <select class="limit-select" id="inputLimitSelect" onchange="setInputLimit(this.value)">
+      <option value="0">すべて</option>
+      <option value="10">10問</option>
+      <option value="20">20問</option>
+      <option value="30">30問</option>
+      <option value="50">50問</option>
+      <option value="100">100問</option>
+    </select>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="iProgressFill"></div></div>
+    <div class="progress-text" id="iProgressText"></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><strong id="iStatCorrect">0</strong>正解</div>
+    <div class="stat"><strong id="iStatWrong">0</strong>不正解</div>
+    <div class="stat"><strong id="iStatRemain">0</strong>残り</div>
+  </div>
+  <div class="input-card">
+    <div class="card-category" id="iCardCategory"></div>
+    <div class="input-question" id="iQuestion"></div>
+    <div class="input-qsub" id="iQsub"></div>
+    <div class="card-note-hint" id="iNoteHint" style="display:none"></div>
+    <input class="input-field" id="iField" type="text" placeholder="ここに入力"
+      autocomplete="off" autocorrect="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter')checkInput()">
+    <div class="input-feedback" id="iFeedback"></div>
+    <div class="input-answer" id="iAnswer"></div>
+  </div>
+  <div class="controls">
+    <button class="btn btn-check" onclick="checkInput()">答え合わせ</button>
+    <button class="btn btn-next" id="iBtnNext" onclick="nextInput()" style="display:none">次へ ▶</button>
+    <button class="btn btn-review" id="inputReviewBtn" style="display:none" onclick="toggleReview('input')"></button>
+    <button class="btn btn-skip" onclick="skipInput()">スキップ</button>
+    <button class="btn btn-shuffle" onclick="shuffleInput()">シャッフル</button>
+  </div>
+</div>
+
+<!-- ===== Quiz ===== -->
+<div class="quiz-view" id="quizView">
+  <div class="sub-toggle">
+    <button class="sub-btn active" id="quizDirEnJa" onclick="setQuizDir('en-ja')">英→日（日本語を選ぶ）</button>
+    <button class="sub-btn" id="quizDirJaEn" onclick="setQuizDir('ja-en')">日→英（英語を選ぶ）</button>
+  </div>
+  <div class="limit-bar">
+    <span>出題数：</span>
+    <select class="limit-select" id="quizLimitSelect" onchange="setQuizLimit(this.value)">
+      <option value="0">すべて</option>
+      <option value="10">10問</option>
+      <option value="20">20問</option>
+      <option value="30">30問</option>
+      <option value="50">50問</option>
+      <option value="100">100問</option>
+    </select>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="qProgressFill"></div></div>
+    <div class="progress-text" id="qProgressText"></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><strong id="qStatCorrect">0</strong>正解</div>
+    <div class="stat"><strong id="qStatWrong">0</strong>不正解</div>
+    <div class="stat"><strong id="qStatRemain">0</strong>残り</div>
+  </div>
+  <div class="quiz-card">
+    <div class="card-category" id="qCardCategory"></div>
+    <div class="quiz-question" id="qQuestion"></div>
+    <div class="quiz-qsub" id="qQsub"></div>
+    <div class="card-note-hint" id="qNoteHint" style="display:none"></div>
+    <div class="quiz-choices" id="qChoices"></div>
+    <div class="quiz-feedback" id="qFeedback"></div>
+    <div class="quiz-note" id="qNote"></div>
+  </div>
+  <div class="controls">
+    <button class="btn btn-next" id="qBtnNext" onclick="nextQuiz()" style="display:none">次へ ▶</button>
+    <button class="btn btn-review" id="quizReviewBtn" style="display:none" onclick="toggleReview('quiz')"></button>
+    <button class="btn btn-shuffle" onclick="shuffleQuiz()">シャッフル</button>
+  </div>
+</div>
+
+<!-- ===== Frequency ===== -->
+<div class="freq-view" id="freqView">
+  <div class="freq-level-selector" id="freqSelector">
+    <div class="freq-level-card lv1" onclick="startFreqSession(1)">
+      <div class="freq-level-info">
+        <div class="freq-level-title">★★★ 頻出</div>
+        <div class="freq-level-desc">試験で必ず出る最重要単語</div>
+      </div>
+      <div class="freq-level-count" id="freqCount1" style="color:#c53030"></div>
+    </div>
+    <div class="freq-level-card lv2" onclick="startFreqSession(2)">
+      <div class="freq-level-info">
+        <div class="freq-level-title">★★☆ 標準</div>
+        <div class="freq-level-desc">よく出る重要単語</div>
+      </div>
+      <div class="freq-level-count" id="freqCount2" style="color:#b7791f"></div>
+    </div>
+    <div class="freq-level-card lv3" onclick="startFreqSession(3)">
+      <div class="freq-level-info">
+        <div class="freq-level-title">★☆☆ 発展</div>
+        <div class="freq-level-desc">余裕があれば覚えたい単語</div>
+      </div>
+      <div class="freq-level-count" id="freqCount3" style="color:#276749"></div>
+    </div>
+    <div class="freq-level-card lv-all" onclick="startFreqSession(0)">
+      <div class="freq-level-info">
+        <div class="freq-level-title">全レベル（頻度順）</div>
+        <div class="freq-level-desc">頻出→標準→発展の順で全単語</div>
+      </div>
+      <div class="freq-level-count" id="freqCountAll" style="color:#2b6cb0"></div>
+    </div>
+  </div>
+  <div class="freq-session" id="freqSession">
+    <button class="freq-back-btn" onclick="backToFreqSelector()">← レベル選択に戻る</button>
+    <div class="freq-header" id="freqSessionHeader"></div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="fProgressFill"></div></div>
+      <div class="progress-text" id="fProgressText"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="fStatCorrect">0</strong>正解</div>
+      <div class="stat"><strong id="fStatWrong">0</strong>不正解</div>
+      <div class="stat"><strong id="fStatRemain">0</strong>残り</div>
+    </div>
+    <div class="card-area">
+      <div class="card" id="fCard" onclick="flipFreqCard()">
+        <div class="card-face card-front">
+          <div class="card-category" id="fCardCategory"></div>
+          <div class="card-main" id="fCardFrontMain"></div>
+          <div class="card-sub" id="fCardFrontSub"></div>
+          <div class="card-note-hint" id="fCardFrontNote" style="display:none"></div>
+          <div class="card-hint">タップして答えを確認</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-category" id="fCardCategoryBack"></div>
+          <div class="card-main" id="fCardBackMain"></div>
+          <div class="card-sub" id="fCardBackSub"></div>
+          <div class="card-note" id="fCardNote" style="display:none"></div>
+          <div class="card-unit" id="fCardUnit" style="display:none"></div>
+          <div id="fFreqBadge"></div>
+        </div>
+      </div>
+    </div>
+    <div class="result-btns" id="fResultBtns" style="display:none">
+      <button class="btn btn-ng" onclick="markFreqResult(false)">✗ 覚えてない</button>
+      <button class="btn btn-ok" onclick="markFreqResult(true)">✓ 覚えた</button>
+    </div>
+    <div style="margin-bottom:12px;display:flex;justify-content:center;">
+      <button class="btn btn-review" id="freqReviewBtn" style="display:none" onclick="toggleReview('freq')"></button>
+    </div>
+    <div class="controls">
+      <button class="btn btn-prev" id="fBtnPrev" onclick="prevFreqCard()">◀ 前へ</button>
+      <button class="btn btn-shuffle" onclick="shuffleFreq()">シャッフル</button>
+      <button class="btn btn-next" id="fBtnNext" onclick="nextFreqCard()">次へ ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== List ===== -->
+<div class="list-view" id="listView">
+  <table class="list-table">
+    <thead><tr><th>英語</th><th>日本語</th><th>カテゴリ</th><th>頻度</th></tr></thead>
+    <tbody id="listBody"></tbody>
+  </table>
+</div>
+
+<script>
+const CARDS = [
+  // B/S Assets - Current
+  {en:"Cash", ja:"現金", cat:"BS-Assets", sub:"Current Asset", freq:1, unit:""},
+  {en:"Cash equivalents", ja:"現金同等物", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Accounts receivable", ja:"売掛金", cat:"BS-Assets", sub:"Current Asset", freq:1, note:"最も一般的な表現。売上債権全般に使う。", unit:"U2-2"},
+  {en:"Trade accounts receivable", ja:"売掛金", cat:"BS-Assets", sub:"Current Asset", freq:2, note:"「Trade（商取引）」を明示した表現。A/Rと同義だが、営業上の売掛金であることを強調する際に使用。", unit:"U2-2"},
+  {en:"Other accounts receivable", ja:"未収入金 / 未収金", cat:"BS-Assets", sub:"Current Asset", freq:3, unit:"U2-2, U6-11"},
+  {en:"Allowance for doubtful accounts (Contra account)", ja:"貸倒引当金（反対勘定）", cat:"BS-Assets", sub:"Current Asset", freq:1, note:"最も標準的な表現。「doubtful（回収が不確か）」な債権への引当金。米国基準で最多使用。", unit:"U7-4"},
+  {en:"Allowance for uncollectible accounts (Contra account)", ja:"貸倒引当金（反対勘定）", cat:"BS-Assets", sub:"Current Asset", freq:3, note:"「uncollectible（回収不能）」を直接表現。doubtful accountsより強い言い回し。", unit:"U7-4"},
+  {en:"Allowance for bad debts (Contra account)", ja:"貸倒引当金（反対勘定）", cat:"BS-Assets", sub:"Current Asset", freq:3, note:"「bad debts（不良債権）」を使った表現。英国英語寄りの言い方。", unit:"U7-4"},
+  {en:"Inventory", ja:"棚卸資産", cat:"BS-Assets", sub:"Current Asset", freq:1, unit:"U2-2, U3-2"},
+  {en:"Merchandise", ja:"商品", cat:"BS-Assets", sub:"Current Asset", freq:1, unit:"U2-2"},
+  {en:"Materials", ja:"原材料", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:"U2-2"},
+  {en:"Work-in-process", ja:"仕掛品", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Finished good", ja:"製品", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Supplies", ja:"貯蔵品", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Interest receivable", ja:"未収利息", cat:"BS-Assets", sub:"Current Asset", freq:2, note:"B/S上の資産科目名。シンプルで最も一般的な表現。", unit:"U6-7"},
+  {en:"Accrued interest revenue", ja:"未収利息", cat:"BS-Assets", sub:"Current Asset", freq:3, note:"発生主義で認識した未収利息収益。収益認識の側面（accrued）を強調した表現。", unit:"U6-7"},
+  {en:"Accrued revenues", ja:"未収収益", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:"U6-7"},
+  {en:"Accrued rent revenue", ja:"未収家賃", cat:"BS-Assets", sub:"Current Asset", freq:3, unit:"U6-7"},
+  {en:"Prepaid expenses", ja:"前払費用", cat:"BS-Assets", sub:"Current Asset", freq:1, unit:""},
+  {en:"Prepaid insurance", ja:"前払保険料", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Prepaid rent", ja:"前払家賃", cat:"BS-Assets", sub:"Current Asset", freq:2, unit:""},
+  {en:"Advances to suppliers", ja:"前渡金", cat:"BS-Assets", sub:"Current Asset", freq:3, unit:"U6-10"},
+  // B/S Assets - Noncurrent
+  {en:"Property, plant and equipment (PPE)", ja:"有形固定資産", cat:"BS-Assets", sub:"Noncurrent Asset", freq:1, unit:""},
+  {en:"Accumulated depreciation (Contra account)", ja:"減価償却累計額（反対勘定）", cat:"BS-Assets", sub:"Noncurrent Asset", freq:1, unit:"U8-3"},
+  {en:"Intangible assets", ja:"無形資産", cat:"BS-Assets", sub:"Noncurrent Asset", freq:2, unit:"U2-3, U8-12"},
+  {en:"Trademark", ja:"商標権", cat:"BS-Assets", sub:"Noncurrent Asset", freq:2, unit:""},
+  {en:"Copyright", ja:"著作権", cat:"BS-Assets", sub:"Noncurrent Asset", freq:2, unit:""},
+  {en:"Patent", ja:"特許権", cat:"BS-Assets", sub:"Noncurrent Asset", freq:2, unit:""},
+  // B/S Liabilities - Current
+  {en:"Bank loans payable", ja:"銀行借入金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:""},
+  {en:"Notes payable", ja:"借入金", cat:"BS-Liabilities", sub:"Current Liability", freq:1, unit:"U2-4"},
+  {en:"Accounts payable", ja:"買掛金", cat:"BS-Liabilities", sub:"Current Liability", freq:1, note:"最も一般的な表現。仕入債務全般に使う。", unit:"U2-4, U9-1"},
+  {en:"Trade accounts payable", ja:"買掛金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"「Trade（商取引）」を明示した表現。A/Pと同義だが、営業上の買掛金であることを強調する際に使用。", unit:"U2-4, U9-1"},
+  {en:"Other accounts payable", ja:"未払金", cat:"BS-Liabilities", sub:"Current Liability", freq:2, unit:"U2-4, U6-11, U9-1"},
+  {en:"Short-term loans payable", ja:"短期借入金", cat:"BS-Liabilities", sub:"Current Liability", freq:2, note:"銀行等からの1年以内の借入金。loan（ローン）形式の借入。", unit:"U9-1"},
+  {en:"Short-term notes payable", ja:"短期借入金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"約束手形（note）による1年以内の借入。手形債務であることを示す。", unit:"U2-4, U9-1"},
+  {en:"Current portion of long-term debt", ja:"1年以内返済予定長期債務", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"長期債務のうち1年以内に返済期限が到来する流動部分。米国基準で多用。", unit:"U2-4, U9-1"},
+  {en:"Long-term debt due within one year", ja:"1年以内返済予定長期債務", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"同義の別表現。「due within one year（1年以内に期限到来）」と直接説明する書き方。", unit:"U2-4"},
+  {en:"Dividends payable", ja:"未払配当金", cat:"BS-Liabilities", sub:"Current Liability", freq:2, unit:""},
+  {en:"Accrued salaries expense", ja:"未払給料", cat:"BS-Liabilities", sub:"Current Liability", freq:1, unit:"U6-9"},
+  {en:"Advances from customers", ja:"前受金", cat:"BS-Liabilities", sub:"Current Liability", freq:2, unit:"U6-8"},
+  {en:"Unearned revenues", ja:"前受収益", cat:"BS-Liabilities", sub:"Current Liability", freq:1, unit:""},
+  {en:"Unearned rent revenue", ja:"前受賃貸料", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:""},
+  {en:"Unearned subscription revenue", ja:"前受購読料", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:""},
+  {en:"Unearned tuition revenue", ja:"前受受講料", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:""},
+  {en:"Accrued interest expense", ja:"未払利息", cat:"BS-Liabilities", sub:"Current Liability", freq:2, note:"発生主義で計上した未払利息費用。費用認識の側面（accrued）を強調した表現。", unit:"U6-9"},
+  {en:"Interest payable", ja:"未払利息", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"B/S上の負債科目名。シンプルで最も一般的な表現。", unit:"U6-9"},
+  {en:"Accrued rent expense", ja:"未払賃借料", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:"U6-9"},
+  {en:"Accrued expenses", ja:"未払費用", cat:"BS-Liabilities", sub:"Current Liability", freq:1, note:"発生済みだが未払の費用全般を指す広い概念。費用（expense）の側面を強調。", unit:"U6-9, U9-1"},
+  {en:"Accrued liabilities", ja:"未払費用", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"同義。負債（liability）としての側面を強調した表現。B/S上の科目名として使われることが多い。", unit:"U6-11, U9-1"},
+  {en:"Accrued salaries and wages", ja:"未払給料賃金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"発生主義で計上した未払給料・賃金。費用認識の側面（accrued）を強調した表現。", unit:"U9-1"},
+  {en:"Salaries and wages payable", ja:"未払給料賃金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, note:"B/S上の負債科目名。シンプルで最も一般的な表現。", unit:"U9-1"},
+  {en:"Accrued employee compensation", ja:"未払従業員報酬", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:"U6-4"},
+  {en:"Warranty liability", ja:"製品保証債務", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:""},
+  {en:"Income taxes payable", ja:"未払法人所得税", cat:"BS-Liabilities", sub:"Current Liability", freq:2, unit:"U9-1"},
+  // B/S Liabilities - Noncurrent
+  {en:"Long-term notes payable", ja:"長期借入金", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:2, note:"約束手形（note）による長期借入。手形債務の形態。", unit:"U2-4, U9-2"},
+  {en:"Long-term loans payable", ja:"長期借入金", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:3, note:"銀行等からの長期借入金。loan（ローン）形式の借入。", unit:"U2-4, U9-2"},
+  {en:"Lease liability", ja:"リース負債", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:2, unit:"U9-2"},
+  {en:"Bonds payable", ja:"社債", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:2, unit:"U9-4"},
+  {en:"Retirement benefit obligations", ja:"退職給付債務", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:3, unit:"U9-2"},
+  // B/S Equity
+  {en:"Common stock", ja:"資本金", cat:"BS-Equity", sub:"Equity", freq:1, unit:""},
+  {en:"Additional paid-in capital", ja:"資本剰余金", cat:"BS-Equity", sub:"Equity", freq:2, unit:"U9-6"},
+  {en:"Paid-in capital", ja:"払込資本", cat:"BS-Equity", sub:"Equity", freq:3, unit:""},
+  {en:"Preferred stock", ja:"優先株式", cat:"BS-Equity", sub:"Equity", freq:3, unit:""},
+  {en:"Treasury stock", ja:"自己株式", cat:"BS-Equity", sub:"Equity", freq:2, unit:""},
+  {en:"Retained earnings", ja:"利益剰余金", cat:"BS-Equity", sub:"Equity", freq:1, unit:"U1-9, U2-5"},
+  // I/S Revenue
+  {en:"Revenues", ja:"収益", cat:"IS-Revenue", sub:"Revenue", freq:1, unit:"U4-3, U6-1, U6-2"},
+  {en:"Sales revenue", ja:"売上収益", cat:"IS-Revenue", sub:"Revenue", freq:1, unit:"U4-4"},
+  {en:"Sales returns and allowances (Contra account)", ja:"売上返品・値引（反対勘定）", cat:"IS-Revenue", sub:"Revenue", freq:3, unit:"U7-1"},
+  {en:"Trade discount on sales (Contra account)", ja:"業者割引（反対勘定）", cat:"IS-Revenue", sub:"Revenue", freq:3, unit:""},
+  {en:"Cash discounts on sales (Contra account)", ja:"現金割引（反対勘定）", cat:"IS-Revenue", sub:"Revenue", freq:3, unit:""},
+  {en:"Interest revenue", ja:"受取利息", cat:"IS-Revenue", sub:"Revenue", freq:1, unit:"U4-4, U6-7"},
+  {en:"Rent revenue", ja:"受取賃貸料", cat:"IS-Revenue", sub:"Revenue", freq:2, unit:"U4-4, U6-8"},
+  // I/S Expenses
+  {en:"Expenses", ja:"費用", cat:"IS-Expenses", sub:"Expense", freq:1, unit:""},
+  {en:"Cost of sales (COS)", ja:"売上原価", cat:"IS-Expenses", sub:"Expense", freq:2, note:"サービス業・製造業を含む幅広い業種で使われる広い表現。", unit:"U4-4, U6-13, U7-5"},
+  {en:"Cost of goods sold (COGS)", ja:"売上原価", cat:"IS-Expenses", sub:"Expense", freq:1, note:"主に商品（モノ）の販売コストに使う表現。小売業・卸売業で多用される。", unit:"U4-4, U6-13, U7-5"},
+  {en:"Depreciation expense", ja:"減価償却費", cat:"IS-Expenses", sub:"Expense", freq:1, unit:"U6-10"},
+  {en:"Selling expenses", ja:"販売費", cat:"IS-Expenses", sub:"Expense", freq:2, unit:"U6-13"},
+  {en:"Advertising expense", ja:"広告宣伝費", cat:"IS-Expenses", sub:"Expense", freq:2, unit:"U6-10, U6-13"},
+  {en:"Commission expense", ja:"販売手数料", cat:"IS-Expenses", sub:"Expense", freq:3, unit:""},
+  {en:"Freight-out", ja:"支払運送料", cat:"IS-Expenses", sub:"Expense", freq:3, unit:""},
+  {en:"Administrative expense", ja:"管理費", cat:"IS-Expenses", sub:"Expense", freq:2, unit:"U6-9"},
+  {en:"Insurance expense", ja:"支払保険料", cat:"IS-Expenses", sub:"Expense", freq:2, unit:"U6-10"},
+  {en:"Bad debt expense", ja:"貸倒引当金繰入", cat:"IS-Expenses", sub:"Expense", freq:1, unit:"U7-3, U7-4"},
+  {en:"Interest expense", ja:"支払利息", cat:"IS-Expenses", sub:"Expense", freq:1, unit:"U6-9, U6-13"},
+  {en:"Rent expense", ja:"賃借料", cat:"IS-Expenses", sub:"Expense", freq:2, unit:"U4-4, U6-9, U6-13"},
+  // I/S Gains/Losses
+  {en:"Gain/loss from disposition of PPE", ja:"有形固定資産売却損益", cat:"IS-Gains", sub:"Gain/Loss", freq:2, unit:""},
+  {en:"Loss on inventory valuation", ja:"棚卸資産評価損", cat:"IS-Gains", sub:"Gain/Loss", freq:2, unit:"U7-13"},
+  {en:"Impairment loss", ja:"減損損失", cat:"IS-Gains", sub:"Gain/Loss", freq:2, unit:"U8-10"},
+  {en:"Income summary", ja:"損益（集合用勘定）", cat:"IS-Gains", sub:"Clearing Account", freq:3, unit:"U5-10"},
+  // FinStmt
+  {en:"Balance sheet", ja:"貸借対照表", cat:"FinStmt", sub:"Financial Statement", freq:1, unit:"U1-4, U1-5"},
+  {en:"Income statement", ja:"損益計算書", cat:"FinStmt", sub:"Financial Statement", freq:1, unit:"U1-4, U1-9"},
+  {en:"Annual report", ja:"アニュアル・レポート、年次報告書", cat:"FinStmt", sub:"Financial Statement", freq:2, unit:"U1-1, U5-10"},
+  {en:"Basic financial statements", ja:"基本財務諸表", cat:"FinStmt", sub:"Financial Statement", freq:2, unit:"U1-4"},
+  {en:"Notes to financial statements", ja:"財務諸表注記", cat:"FinStmt", sub:"Financial Statement", freq:2, unit:"U1-1"},
+  {en:"Net income", ja:"当期純利益", cat:"FinStmt", sub:"Income Statement", freq:1, unit:"U6-13"},
+  {en:"Net loss", ja:"当期純損失", cat:"FinStmt", sub:"Income Statement", freq:1, unit:"U6-13"},
+  {en:"Income before taxes", ja:"税引前利益", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U7-11"},
+  {en:"Net sales", ja:"純売上高", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U7-1"},
+  {en:"Income taxes", ja:"法人税等", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U6-13"},
+  {en:"Operating income", ja:"営業利益", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U6-13"},
+  {en:"Operating loss", ja:"営業損失", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U4-4, U6-13"},
+  {en:"Selling, general and administrative expenses", ja:"販売費及び一般管理費", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U4-4, U6-13"},
+  {en:"Income (loss) from continuing operations", ja:"継続事業による利益（損失）", cat:"FinStmt", sub:"Income Statement", freq:3, unit:"U6-13"},
+  {en:"Net of taxes", ja:"税引後", cat:"FinStmt", sub:"Income Statement", freq:3, unit:"U6-13"},
+  // Concept
+  {en:"Accrual-basis accounting", ja:"発生主義会計", cat:"Concept", sub:"Accounting Principle", freq:1, unit:"U2-2"},
+  {en:"Matching principle", ja:"費用収益対応の原則", cat:"Concept", sub:"Accounting Principle", freq:1, unit:"U1-15, U6-4"},
+  {en:"Materiality", ja:"重要性", cat:"Concept", sub:"Accounting Principle", freq:1, unit:"U1-1, U1-16"},
+  {en:"Dual-aspect concept", ja:"貸借一致の原則", cat:"Concept", sub:"Accounting Principle", freq:1, unit:"U1-5"},
+  {en:"Revenue recognition", ja:"収益認識", cat:"Concept", sub:"Accounting Principle", freq:1, unit:"U6-1"},
+  {en:"Revenue", ja:"収益", cat:"Concept", sub:"Income Statement", freq:1, unit:"U4-3, U6-1, U6-2"},
+  {en:"Income", ja:"利益", cat:"Concept", sub:"Income Statement", freq:1, unit:"U4-1"},
+  {en:"Depreciation", ja:"減価償却", cat:"Concept", sub:"Fixed Assets", freq:1, unit:"U2-3, U8-3"},
+  {en:"Net assets", ja:"純資産", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U1-8"},
+  {en:"Assets", ja:"資産", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U1-5, U1-6"},
+  {en:"Liabilities", ja:"負債", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U1-5, U1-7"},
+  {en:"Current assets", ja:"流動資産", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U2-1"},
+  {en:"Current liabilities", ja:"流動負債", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U2-1"},
+  {en:"Dividends", ja:"配当", cat:"Concept", sub:"Equity", freq:1, unit:"U6-3, U9-8"},
+  {en:"Sales", ja:"売上", cat:"Concept", sub:"Revenue", freq:1, unit:"U4-4"},
+  {en:"Cost", ja:"原価、取得原価", cat:"Concept", sub:"Measurement", freq:1, unit:"U4-4, U6-13, U7-5"},
+  {en:"Debt", ja:"債務、有利子負債", cat:"Concept", sub:"Liabilities", freq:1, unit:"U2-4"},
+  {en:"Relevance", ja:"目的適合性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Neutrality", ja:"中立性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Decision-useful information", ja:"意思決定に有用な情報", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1, U1-3"},
+  {en:"Cost-benefit relationship", ja:"費用対効果の関係", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-16"},
+  {en:"Money-measurement concept", ja:"貨幣的測定の公準", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-11"},
+  {en:"Monetary unit", ja:"貨幣単位", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-11"},
+  {en:"Going concern", ja:"継続企業の前提", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-1"},
+  {en:"Separate legal existence", ja:"法人格", cat:"Concept", sub:"Business Concept", freq:2, unit:"U1-4"},
+  {en:"Limited liability", ja:"有限責任制", cat:"Concept", sub:"Business Concept", freq:2, unit:"U1-4, U1-8"},
+  {en:"Reporting entity", ja:"報告企業", cat:"Concept", sub:"Business Concept", freq:2, unit:"U1-4"},
+  {en:"Industry practice", ja:"業界慣行", cat:"Concept", sub:"Accounting Principle", freq:3, unit:"U1-16"},
+  {en:"Noncurrent assets", ja:"非流動資産", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U2-1, U2-3, U8-1"},
+  {en:"Noncurrent liabilities", ja:"非流動負債", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U2-1, U9-2"},
+  {en:"Normal operating cycle rule", ja:"正常営業循環基準", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U2-1"},
+  {en:"One-year rule", ja:"ワンイヤー・ルール", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U2-1"},
+  {en:"Revenue from contracts with customers", ja:"顧客との契約から生じる収益", cat:"Concept", sub:"Revenue Recognition", freq:2, unit:"U6-4"},
+  {en:"Depreciable amount", ja:"償却可能額", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-3"},
+  {en:"Residual value", ja:"残存価額", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-3"},
+  {en:"Service life", ja:"耐用年数", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-3"},
+  {en:"Amortization", ja:"償却", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U2-3, U8-12"},
+  {en:"Impairment", ja:"減損", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-10"},
+  {en:"Recoverable amount", ja:"回収可能価額", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-10"},
+  {en:"Reversal of impairment loss", ja:"減損損失の戻し入れ", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-10"},
+  {en:"Long-lived assets", ja:"長期性資産", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-1, U8-2"},
+  {en:"Salvage value", ja:"残存価額", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U8-3"},
+  {en:"Net realizable value", ja:"正味実現可能価額", cat:"Concept", sub:"Inventory", freq:2, unit:"U7-4, U7-13"},
+  {en:"Lower of cost or market basis", ja:"低価法", cat:"Concept", sub:"Inventory", freq:2, unit:"U7-13"},
+  {en:"Inventory cost flow assumptions", ja:"在庫フローの仮説", cat:"Concept", sub:"Inventory", freq:2, unit:"U7-10"},
+  {en:"Measurement", ja:"測定", cat:"Concept", sub:"Measurement", freq:2, unit:"U5-3"},
+  {en:"Measurement basis", ja:"測定基礎", cat:"Concept", sub:"Measurement", freq:2, unit:"U5-4"},
+  {en:"Initial measurement", ja:"当初測定", cat:"Concept", sub:"Measurement", freq:2, unit:"U5-3, U5-4"},
+  {en:"Current cost", ja:"現在原価", cat:"Concept", sub:"Measurement", freq:3, unit:"U5-3"},
+  {en:"Replacement cost", ja:"再調達原価", cat:"Concept", sub:"Measurement", freq:3, unit:"U5-3, U7-13"},
+  {en:"Market rate", ja:"市場利率", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Stated rate", ja:"表面利率", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Coupon rate", ja:"クーポンレート", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Maturity date", ja:"満期日", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Maturity value", ja:"債還価額", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Issue price", ja:"発行価額", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Issue at par", ja:"パー発行", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Issue at discount", ja:"ディスカウント発行", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Issue at premium", ja:"プレミアム発行", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Redemption date", ja:"償還期日、債還日", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Early redemption", ja:"期限前償還", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Coupon bonds", ja:"利付債", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3, U9-4"},
+  {en:"Discount bonds", ja:"割引債", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-4"},
+  {en:"Serial bond", ja:"連続償還債", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Dividend declaration", ja:"配当決議", cat:"Concept", sub:"Equity", freq:2, unit:"U9-8"},
+  {en:"Date of record", ja:"配当基準日", cat:"Concept", sub:"Equity", freq:2, unit:"U9-8"},
+  {en:"Share buyback", ja:"自社株の買い戻し", cat:"Concept", sub:"Equity", freq:2, unit:"U9-6", note:"Share repurchaseと同義。"},
+  {en:"Share repurchase", ja:"自社株の買い戻し", cat:"Concept", sub:"Equity", freq:3, unit:"U9-6", note:"Share buybackと同義。"},
+  {en:"Shareholder distributions", ja:"株主還元", cat:"Concept", sub:"Equity", freq:2, unit:"U9-8"},
+  {en:"Residual claim", ja:"残余請求権", cat:"Concept", sub:"Equity", freq:3, unit:"U1-8"},
+  {en:"Bankruptcy", ja:"破産", cat:"Concept", sub:"Business Concept", freq:2, unit:"U3-1"},
+  {en:"Interest-bearing debt", ja:"有利子負債", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-4, U9-3"},
+  {en:"Long-term debt", ja:"長期債務", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-4, U9-1"},
+  {en:"Solvency", ja:"支払能力", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-1"},
+  {en:"Liquidity", ja:"流動性", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-1"},
+  {en:"Debt forgiveness", ja:"債務免除", cat:"Concept", sub:"Liabilities", freq:3, unit:"U5-2"},
+  {en:"Debt-equity swap", ja:"デット・エクイティ・スワップ", cat:"Concept", sub:"Liabilities", freq:3, unit:"U6-2"},
+  {en:"Revenue-related accruals", ja:"未収取引", cat:"Concept", sub:"Adjustments", freq:2, unit:"U6-7, U6-11"},
+  {en:"Revenue-related prepayments", ja:"前受取引", cat:"Concept", sub:"Adjustments", freq:2, unit:"U6-8, U6-11"},
+  {en:"Accounting estimates", ja:"会計上の見積り", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-1, U6-12"},
+  {en:"Accounting period", ja:"会計期間", cat:"Concept", sub:"Accounting", freq:2, unit:"U1-14"},
+  {en:"Sales proceeds", ja:"売却手取額", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-11"},
+  {en:"Retirement (of long-lived assets)", ja:"除却（長期性資産の）", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-11"},
+  {en:"Retirement (of treasury stock)", ja:"消却（自己株式の）", cat:"Concept", sub:"Equity", freq:3, unit:"U2-5, U9-6"},
+  {en:"Management judgment", ja:"経営者による判断", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-5"},
+  {en:"In-kind contribution", ja:"現物出資", cat:"Concept", sub:"Equity", freq:3, unit:"U2-5"},
+  {en:"Sales allowance", ja:"売上値引", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-1"},
+  {en:"Sales discount", ja:"売上割引", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Sales rebate", ja:"売上割戻", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Sales returns", ja:"売上返品", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-1"},
+  {en:"Credit terms", ja:"与信条件", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Early order discount", ja:"早期発注割引", cat:"Concept", sub:"Revenue", freq:3, unit:"U7-2"},
+  {en:"Due date", ja:"支払期限", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-4"},
+  {en:"Operating cycle", ja:"営業循環", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U1-5"},
+  {en:"Normal balance", ja:"通常残高", cat:"Concept", sub:"Bookkeeping", freq:2, unit:"U5-6"},
+  {en:"Nonfinancial assets", ja:"非金融資産", cat:"Concept", sub:"Assets", freq:3, unit:"U5-5"},
+  {en:"Monetary receivables", ja:"金銭債権", cat:"Concept", sub:"Assets", freq:3, unit:"U5-5"},
+  {en:"Mixed-attribute measurement model", ja:"混合属性測定モデル", cat:"Concept", sub:"Measurement", freq:3, unit:"U5-5"},
+  {en:"Implicit transaction", ja:"暗黙的取引", cat:"Concept", sub:"Accounting", freq:3, unit:"U6-11"},
+  {en:"Securities", ja:"有価証券", cat:"Concept", sub:"Assets", freq:2, unit:"U5-5, U9-3"},
+  {en:"Operating expenses", ja:"営業費", cat:"Concept", sub:"Income Statement", freq:2, unit:"U6-13"},
+  {en:"Other revenues and gains", ja:"その他の収益及び利得", cat:"Concept", sub:"Income Statement", freq:3, unit:"U6-13"},
+  {en:"Other expenses and losses", ja:"その他の費用及び損失", cat:"Concept", sub:"Income Statement", freq:3, unit:"U6-11"},
+  {en:"Cost accounting", ja:"原価計算", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-4, U5-5"},
+  {en:"Directly attributable costs", ja:"直接起因するコスト", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-2"},
+  {en:"Reorganization", ja:"更生", cat:"Concept", sub:"Business Concept", freq:3, unit:"U1-8"},
+  {en:"Liquidation", ja:"清算", cat:"Concept", sub:"Business Concept", freq:2, unit:"U1-8"},
+  {en:"Authorized stock", ja:"授権株式", cat:"Concept", sub:"Equity", freq:2, unit:"U9-6"},
+  {en:"Issued stock", ja:"発行済株式", cat:"Concept", sub:"Equity", freq:2, unit:"U9-6"},
+  {en:"No-par-value stock", ja:"無額面株式", cat:"Concept", sub:"Equity", freq:3, unit:"U9-6"},
+  {en:"Line item", ja:"表示項目", cat:"Concept", sub:"Financial Statement", freq:3, unit:"U1-1, U4-4"},
+  {en:"Liquidation preference", ja:"残余財産分配に関する優先権", cat:"Concept", sub:"Equity", freq:3, unit:"U9-7"},
+  {en:"Dividend preference", ja:"配当の優先権", cat:"Concept", sub:"Equity", freq:3, unit:"U9-7"},
+  {en:"Intangible assets with definite useful lives", ja:"耐用年数を確定できる無形資産", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-12"},
+  {en:"Intangible assets with indefinite useful lives", ja:"耐用年数を確定できない無形資産", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-12"},
+  {en:"Internally generated intangible assets", ja:"自己創設無形資産", cat:"Concept", sub:"Fixed Assets", freq:3, unit:"U8-12"},
+  // Method
+  {en:"Accelerated depreciation methods", ja:"加速償却法", cat:"Method", sub:"Depreciation", freq:2, unit:"U8-4, U8-7"},
+  {en:"Double-declining balance method", ja:"2倍定率法", cat:"Method", sub:"Depreciation", freq:2, unit:"U8-7"},
+  {en:"Straight-line method", ja:"定額法", cat:"Method", sub:"Depreciation", freq:1, unit:"U8-4, U8-6"},
+  {en:"Depreciation method", ja:"減価償却方法", cat:"Method", sub:"Depreciation", freq:2, unit:"U8-4"},
+  {en:"Average cost method", ja:"平均原価法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9, U7-12"},
+  {en:"Moving-average method", ja:"移動平均法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9, U7-12"},
+  {en:"Last-in, first-out method", ja:"後入先出法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9, U7-11"},
+  {en:"Specific identification method", ja:"個別法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-6"},
+  {en:"Cost formula for inventory", ja:"棚卸資産の原価算定方式", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9"},
+  {en:"Direct write-off method", ja:"直接償却法", cat:"Method", sub:"Receivables", freq:2, unit:"U7-3"},
+  {en:"Allowance method", ja:"引当法", cat:"Method", sub:"Receivables", freq:2, unit:"U7-4"},
+  {en:"DCF method", ja:"割引キャッシュ・フロー法", cat:"Method", sub:"Valuation", freq:2, unit:"U8-10"},
+  {en:"Cost method", ja:"原価法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9"},
+  // Org
+  {en:"Audit", ja:"監査", cat:"Org", sub:"Audit", freq:1, unit:"U1-4, U5-10"},
+  {en:"Audit committee", ja:"監査委員会", cat:"Org", sub:"Audit", freq:2, unit:"U1-3"},
+  {en:"Audit firm", ja:"監査法人", cat:"Org", sub:"Audit", freq:2, unit:"U1-3"},
+  {en:"Independent auditors", ja:"独立監査人", cat:"Org", sub:"Audit", freq:2, unit:"U1-3, U1-4"},
+  {en:"Adverse opinion", ja:"不適正意見", cat:"Org", sub:"Audit", freq:3, unit:"U1-4"},
+  {en:"Disclaimer of opinion", ja:"意見差し控え", cat:"Org", sub:"Audit", freq:3, unit:"U1-4"},
+  {en:"Internal control report", ja:"内部統制報告書", cat:"Org", sub:"Audit", freq:2, unit:"U5-10"},
+  {en:"IASB", ja:"国際会計基準審議会", cat:"Org", sub:"Standard Setter", freq:2, unit:"U1-10, U6-4"},
+  {en:"IFRS", ja:"国際会計基準（国際財務報告基準）", cat:"Org", sub:"Standard Setter", freq:2, unit:"U1-2"},
+  {en:"SEC", ja:"証券取引委員会", cat:"Org", sub:"Regulator", freq:2, unit:"U1-1"},
+  {en:"Sarbanes-Oxley Act of 2002", ja:"企業改革法", cat:"Org", sub:"Regulation", freq:2, unit:"U1-3, U5-10"},
+  {en:"Securities Exchange Act of 1934", ja:"証券取引所法", cat:"Org", sub:"Regulation", freq:3, unit:"U1-2"},
+  {en:"Shareholder", ja:"株主", cat:"Org", sub:"Stakeholder", freq:1, unit:"U1-3, U1-8"},
+  {en:"Lenders", ja:"融資者", cat:"Org", sub:"Stakeholder", freq:2, unit:"U1-3"},
+  {en:"Investors", ja:"投資者", cat:"Org", sub:"Stakeholder", freq:2, unit:"U1-3"},
+  {en:"Creditor", ja:"債権者", cat:"Org", sub:"Stakeholder", freq:2, unit:"U1-3"},
+  {en:"Management", ja:"経営者", cat:"Org", sub:"Stakeholder", freq:1, unit:"U1-3"},
+  {en:"Management accounting", ja:"管理会計", cat:"Org", sub:"Accounting Type", freq:2, unit:"U1-3"},
+  {en:"Manufacturing company", ja:"製造会社", cat:"Org", sub:"Business Type", freq:2, unit:"U9-1"},
+  {en:"Merchandising company", ja:"商品販売会社", cat:"Org", sub:"Business Type", freq:2, unit:"U9-1"},
+  {en:"Sole proprietorship", ja:"個人事業", cat:"Org", sub:"Business Type", freq:2, unit:"U1-4"},
+  {en:"SFAC", ja:"財務会計概念書", cat:"Org", sub:"Standard", freq:3, unit:"U1-10"},
+  // Trans
+  {en:"Account", ja:"勘定", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-1, U5-8"},
+  {en:"Journal", ja:"仕訳帳", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-8"},
+  {en:"Journal entry", ja:"仕訳", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-7"},
+  {en:"Debit", ja:"借方", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-6"},
+  {en:"Credit", ja:"貸方", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-6"},
+  {en:"Accounting books", ja:"会計帳簿", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-1, U5-8"},
+  {en:"Accounting cycle", ja:"会計サイクル", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-8"},
+  {en:"Special journal", ja:"特殊仕訳帳", cat:"Trans", sub:"Bookkeeping", freq:3, unit:"U5-8"},
+  {en:"Balance brought forward", ja:"前期繰越残高", cat:"Trans", sub:"Bookkeeping", freq:3, unit:"U5-10"},
+  {en:"Balance carried forward", ja:"次期繰越残高", cat:"Trans", sub:"Bookkeeping", freq:3, unit:"U5-10"},
+  {en:"Invoice", ja:"インボイス", cat:"Trans", sub:"Document", freq:2, unit:"U6-11, U7-2, U9-1"},
+  {en:"Delivery note", ja:"納品書", cat:"Trans", sub:"Document", freq:2, unit:"U6-11"},
+  {en:"Debit note", ja:"デビット・ノート", cat:"Trans", sub:"Document", freq:3, unit:"U7-2"},
+  {en:"Credit note", ja:"クレジット・ノート", cat:"Trans", sub:"Document", freq:3, unit:"U7-2"},
+  {en:"Loan on bill", ja:"手形借入", cat:"Trans", sub:"Borrowing", freq:2, unit:"U9-1"},
+  {en:"Loan on deeds", ja:"証書借入", cat:"Trans", sub:"Borrowing", freq:2, unit:"U9-1, U9-2"},
+  // Ratio
+  {en:"Current ratio", ja:"流動比率", cat:"Ratio", sub:"Liquidity Ratio", freq:2, unit:"U2-1"},
+  {en:"Net working capital", ja:"正味運転資本", cat:"Ratio", sub:"Liquidity Ratio", freq:2, unit:"U2-1"},
+  {en:"Short-term solvency", ja:"短期的な支払能力", cat:"Ratio", sub:"Liquidity Ratio", freq:2, unit:"U2-1"},
+  {en:"Return on equity", ja:"株主資本利益率", cat:"Ratio", sub:"Profitability Ratio", freq:2, unit:"U9-8"},
+  // Page 308 (V–Z)
+  {en:"Verifiability", ja:"検証可能性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Voucher", ja:"証憑", cat:"Trans", sub:"Document", freq:2, unit:"U6-11"},
+  {en:"Weighted-average method", ja:"加重平均法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-9, U7-12"},
+  {en:"Working capital", ja:"運転資本", cat:"Concept", sub:"Balance Sheet", freq:2, unit:"U2-1"},
+  {en:"Working capital items", ja:"運転資本項目", cat:"Concept", sub:"Balance Sheet", freq:3, unit:"U2-1"},
+  {en:"Worksheet", ja:"精算表", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U6-12"},
+  {en:"Write-down", ja:"評価下げ", cat:"Concept", sub:"Valuation", freq:2, unit:"U8-10"},
+  {en:"Write-up", ja:"評価上げ", cat:"Concept", sub:"Valuation", freq:3, unit:"U8-10"},
+  {en:"Zero-coupon bond", ja:"割引債", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-4", note:"クーポン（利息）の支払いがない債券。Discount bondsと同義。"},
+  // Page 300 (B–C)
+  {en:"Beginning balance", ja:"期首残高", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-6"},
+  {en:"Board of directors", ja:"取締役会", cat:"Org", sub:"Governance", freq:2, unit:"U1-3, U9-7"},
+  {en:"Bond with stock warrant", ja:"ワラント債", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-3"},
+  {en:"Bondholder", ja:"社債保有者", cat:"Org", sub:"Stakeholder", freq:2, unit:"U9-2, U9-3"},
+  {en:"Book value", ja:"帳簿価額", cat:"Concept", sub:"Valuation", freq:1, unit:"U7-4, U8-3", note:"Carrying amount / Carrying valueと同義。資産の取得原価から減価償却累計額等を控除した金額。"},
+  {en:"Business failure", ja:"倒産", cat:"Concept", sub:"Business Concept", freq:2, unit:"U1-8"},
+  {en:"Calendar year", ja:"暦年", cat:"Concept", sub:"Accounting Period", freq:2, unit:"U1-14"},
+  {en:"Callable bond", ja:"コーラブル債、期限前償還条項付債券", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Capital reduction", ja:"減資", cat:"Concept", sub:"Equity", freq:3, unit:"U2-5, U9-8"},
+  {en:"Carrying amount", ja:"帳簿価額", cat:"Concept", sub:"Valuation", freq:2, unit:"U8-3", note:"Book value / Carrying valueと同義。B/S上の資産・負債の計上金額。"},
+  {en:"Carrying value", ja:"帳簿価額", cat:"Concept", sub:"Valuation", freq:2, unit:"U8-3, U8-9", note:"Book value / Carrying amountと同義。"},
+  {en:"Cash and cash equivalents", ja:"現金及び現金同等物", cat:"Concept", sub:"Assets", freq:1, unit:"U1-9, U2-2"},
+  {en:"Cash contribution", ja:"金銭出資", cat:"Concept", sub:"Equity", freq:3, unit:"U2-5"},
+  {en:"Cash disbursement", ja:"現金支出", cat:"Concept", sub:"Cash", freq:2, unit:"U6-9"},
+  {en:"Cash discount", ja:"現金割引", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Cash dividend", ja:"現金配当", cat:"Concept", sub:"Equity", freq:2, unit:"U9-8"},
+  {en:"Cash receipt", ja:"現金収入", cat:"Concept", sub:"Cash", freq:2, unit:"U6-7"},
+  {en:"Cash transaction", ja:"現金取引", cat:"Concept", sub:"Cash", freq:2, unit:"U6-6"},
+  {en:"Cash-basis accounting", ja:"現金主義会計", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U6-4"},
+  {en:"Certified Internal Auditor", ja:"公認内部監査人", cat:"Org", sub:"Audit", freq:3, unit:"U1-3"},
+  {en:"Chart of accounts", ja:"勘定科目表", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-8"},
+  {en:"Chief Executive Officer", ja:"最高経営責任者", cat:"Org", sub:"Executives", freq:2, unit:"U1-3"},
+  {en:"Chief Financial Officer", ja:"最高財務責任者", cat:"Org", sub:"Executives", freq:2, unit:"U1-3"},
+  {en:"Chief Operating Officer", ja:"最高業務執行責任者", cat:"Org", sub:"Executives", freq:2, unit:"U1-3"},
+  {en:"Closing adjusting entries", ja:"決算整理仕訳", cat:"Trans", sub:"Closing", freq:2, unit:"U6-12"},
+  {en:"Closing adjustments", ja:"決算整理", cat:"Trans", sub:"Closing", freq:2, unit:"U6-11, U6-12"},
+  {en:"Closing entries", ja:"締切仕訳", cat:"Trans", sub:"Closing", freq:2, unit:"U5-10"},
+  {en:"Closing of the books", ja:"帳簿の締切り", cat:"Trans", sub:"Closing", freq:2, unit:"U5-10"},
+  {en:"Common dividend", ja:"普通配当金", cat:"Concept", sub:"Equity", freq:2, unit:"U6-13"},
+  {en:"Common shareholders", ja:"普通株主", cat:"Org", sub:"Stakeholder", freq:2, unit:"U9-7"},
+  {en:"Comparability", ja:"比較可能性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1, U1-2"},
+  {en:"Completeness", ja:"完全性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Confirmatory value", ja:"確認価値", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Conservatism", ja:"保守主義", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-1"},
+  {en:"Contra account", ja:"相対勘定、相殺勘定、反対勘定", cat:"Concept", sub:"Bookkeeping", freq:2, unit:"U1-16, U7-13"},
+  {en:"Control", ja:"支配", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U6-4"},
+  {en:"Convertible bond", ja:"転換社債", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-4"},
+  {en:"Corporate bond", ja:"社債", cat:"Concept", sub:"Bonds", freq:2, unit:"U1-3"},
+  {en:"Corporate officers", ja:"執行役員", cat:"Org", sub:"Executives", freq:2, unit:"U2-3"},
+  {en:"Corporation", ja:"株式会社", cat:"Org", sub:"Business Type", freq:2, unit:"U1-3, U1-4"},
+  // Page 302 (E–H)
+  {en:"Earnings per share", ja:"1株当たり利益", cat:"Ratio", sub:"Profitability Ratio", freq:2, unit:"U9-8"},
+  {en:"End of the period", ja:"期末", cat:"Concept", sub:"Accounting Period", freq:2, unit:"U1-14"},
+  {en:"Ending balance", ja:"期末残高", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-6"},
+  {en:"Enhancing qualitative characteristics", ja:"補強的な質的特性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Entity concept", ja:"企業実体の公準", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-12"},
+  {en:"Equity", ja:"資本", cat:"Concept", sub:"Balance Sheet", freq:1, unit:"U1-5, U1-8"},
+  {en:"Event", ja:"事象", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-2"},
+  {en:"Exchange transaction", ja:"交換取引", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-2"},
+  {en:"Expense", ja:"費用", cat:"Concept", sub:"Income Statement", freq:1, unit:"U4-3, U6-3"},
+  {en:"Expense-related accruals", ja:"未払取引", cat:"Concept", sub:"Adjustments", freq:2, unit:"U6-9"},
+  {en:"Expense-related prepayments", ja:"前払取引", cat:"Concept", sub:"Adjustments", freq:2, unit:"U6-10"},
+  {en:"Explicit transaction", ja:"明示的取引", cat:"Concept", sub:"Accounting", freq:3, unit:"U6-11"},
+  {en:"Face amount", ja:"額面", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3"},
+  {en:"Fair value", ja:"公正価値、時価", cat:"Concept", sub:"Measurement", freq:1, unit:"U5-4, U5-5"},
+  {en:"Fair value less costs of disposal", ja:"処分コスト控除後の公正価値", cat:"Concept", sub:"Measurement", freq:3, unit:"U8-10"},
+  {en:"Fair value principle", ja:"時価主義", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-15, U5-4, U5-5"},
+  {en:"Faithful representation", ja:"忠実な表現", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"FASB", ja:"財務会計基準審議会", cat:"Org", sub:"Standard Setter", freq:2, unit:"U1-10"},
+  {en:"Financial accounting", ja:"財務会計", cat:"Concept", sub:"Accounting", freq:1, unit:"U1-3"},
+  {en:"Financial Accounting Standards Board", ja:"財務会計基準審議会", cat:"Org", sub:"Standard Setter", freq:2, unit:"U1-10"},
+  {en:"Financial assets", ja:"金融資産", cat:"Concept", sub:"Assets", freq:2, unit:"U2-3"},
+  {en:"Financial position", ja:"財政状態", cat:"Concept", sub:"Financial Statement", freq:2, unit:"U1-4, U1-5"},
+  {en:"Financial soundness", ja:"財務的な健全性", cat:"Concept", sub:"Financial Statement", freq:2, unit:"U2-1"},
+  {en:"Financial statements", ja:"財務諸表", cat:"FinStmt", sub:"Financial Statement", freq:1, unit:"U1-1"},
+  {en:"First-in, first-out method", ja:"先入先出法", cat:"Method", sub:"Inventory", freq:1, unit:"U7-9, U7-10"},
+  {en:"Fiscal year", ja:"会計年度", cat:"Concept", sub:"Accounting Period", freq:2, unit:"U1-14"},
+  {en:"Fixed-rate coupon bond", ja:"固定利付債", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-3"},
+  {en:"Floating-rate coupon bond", ja:"変動利付債", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-3"},
+  {en:"Free from error", ja:"誤謬の不存在", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Fundamental qualitative characteristics", ja:"基本的な質的特性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"GAAP", ja:"一般に認められた会計原則", cat:"Org", sub:"Standard", freq:1, unit:"U1-1, U1-2"},
+  {en:"General and administrative expenses", ja:"一般管理費", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U6-13"},
+  {en:"General journal", ja:"一般仕訳帳", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-8"},
+  {en:"General ledger", ja:"総勘定元帳", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-8"},
+  {en:"Generally accepted accounting principles", ja:"一般に認められた会計原則", cat:"Org", sub:"Standard", freq:2, unit:"U1-1, U1-2"},
+  {en:"Going-concern concept", ja:"継続企業の公準", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-12"},
+  {en:"Goods available for sale", ja:"販売可能商品", cat:"Concept", sub:"Inventory", freq:2, unit:"U7-13"},
+  {en:"Goodwill", ja:"のれん", cat:"BS-Assets", sub:"Noncurrent Asset", freq:2, unit:"U8-10"},
+  {en:"Government grants", ja:"政府補助金", cat:"Concept", sub:"Revenue", freq:3, unit:"U5-2"},
+  {en:"Gross loss", ja:"売上総損失", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U5-10"},
+  {en:"Gross profit", ja:"売上総利益", cat:"FinStmt", sub:"Income Statement", freq:1, unit:"U4-4, U8-11"},
+  {en:"Gross sales", ja:"総売上高", cat:"FinStmt", sub:"Income Statement", freq:2, unit:"U7-1"},
+  {en:"Historical cost principle", ja:"取得原価主義", cat:"Concept", sub:"Accounting Principle", freq:2, unit:"U1-15, U5-5"},
+  // Page 305 (O–R)
+  {en:"Outstanding stock", ja:"流通株式", cat:"BS-Equity", sub:"Equity", freq:2, unit:"U9-6"},
+  {en:"Overstatement", ja:"過大計上", cat:"Concept", sub:"Accounting", freq:2, unit:"U7-4"},
+  {en:"Par value", ja:"額面金額", cat:"Concept", sub:"Equity", freq:2, unit:"U9-6"},
+  {en:"Par value method", ja:"額面価格法", cat:"Method", sub:"Equity", freq:3, unit:"U9-6"},
+  {en:"Partnership", ja:"パートナーシップ", cat:"Org", sub:"Business Type", freq:2, unit:"U1-4"},
+  {en:"Payment terms", ja:"支払条件", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Percentage of receivables method", ja:"売上債権比率法", cat:"Method", sub:"Receivables", freq:3, unit:"U7-4"},
+  {en:"Percentage of sales method", ja:"売上高比率法", cat:"Method", sub:"Receivables", freq:3, unit:"U7-4"},
+  {en:"Performance obligation", ja:"履行義務", cat:"Concept", sub:"Revenue Recognition", freq:2, unit:"U6-4"},
+  {en:"Period expenses", ja:"期間費用", cat:"Concept", sub:"Income Statement", freq:2, unit:"U6-4"},
+  {en:"Periodic FIFO method", ja:"先入先出棚卸計算法", cat:"Method", sub:"Inventory", freq:3, unit:"U7-9"},
+  {en:"Periodic inventory system", ja:"棚卸計算法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-8, U7-9"},
+  {en:"Periodic LIFO method", ja:"後入先出棚卸計算法", cat:"Method", sub:"Inventory", freq:3, unit:"U7-9"},
+  {en:"Perpetual FIFO method", ja:"先入先出継続記録法", cat:"Method", sub:"Inventory", freq:3, unit:"U7-9"},
+  {en:"Perpetual inventory system", ja:"継続記録法", cat:"Method", sub:"Inventory", freq:2, unit:"U7-7, U7-9"},
+  {en:"Perpetual LIFO method", ja:"後入先出継続記録法", cat:"Method", sub:"Inventory", freq:3, unit:"U7-8"},
+  {en:"Physical inventory count", ja:"実地棚卸", cat:"Concept", sub:"Inventory", freq:2, unit:"U7-8"},
+  {en:"Post-closing trial balance", ja:"繰越試算表", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-8"},
+  {en:"Posting", ja:"転記", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U2-3"},
+  {en:"Predictive value", ja:"予測価値", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Preferred dividend", ja:"優先配当金", cat:"Concept", sub:"Equity", freq:2, unit:"U9-7"},
+  {en:"Preferred shareholders", ja:"優先株主", cat:"Org", sub:"Stakeholder", freq:2, unit:"U9-7"},
+  {en:"Primary users of financial reporting", ja:"財務報告の主要な利用者", cat:"Concept", sub:"Financial Statement", freq:2, unit:"U1-3"},
+  {en:"Principal", ja:"元本", cat:"Concept", sub:"Bonds", freq:2, unit:"U9-3, U9-4"},
+  {en:"Principal accounting books", ja:"主要簿", cat:"Trans", sub:"Bookkeeping", freq:3, unit:"U5-8"},
+  {en:"Principle of dual responsibility", ja:"二重責任の原則", cat:"Concept", sub:"Audit", freq:3, unit:"U1-4"},
+  {en:"Private placement", ja:"私募", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Private placement bond", ja:"私募債", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:3, unit:"U9-2"},
+  {en:"Product cost", ja:"製品原価", cat:"Concept", sub:"Cost", freq:2, unit:"U6-4"},
+  {en:"Promissory note", ja:"約束手形", cat:"Concept", sub:"Liabilities", freq:2, unit:"U2-4, U9-1"},
+  {en:"Provision", ja:"引当金", cat:"BS-Liabilities", sub:"Current Liability", freq:2, unit:"U9-1"},
+  {en:"Provision for product warranties", ja:"製品保証引当金", cat:"BS-Liabilities", sub:"Current Liability", freq:3, unit:"U9-1"},
+  {en:"Public issue", ja:"公募（債券の）", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Public issue bond", ja:"公募債", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:3, unit:"U9-2"},
+  {en:"Purchase order", ja:"発注書", cat:"Trans", sub:"Document", freq:2, unit:"U9-1"},
+  {en:"Purchase price", ja:"購入価格", cat:"Concept", sub:"Measurement", freq:2, unit:"U8-2"},
+  {en:"Puttable bond", ja:"償還請求権付社債、プット条項付債券", cat:"Concept", sub:"Bonds", freq:3, unit:"U9-4"},
+  {en:"Qualitative characteristics of useful financial information", ja:"有用な財務情報の質的特性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Quarter", ja:"四半期", cat:"Concept", sub:"Accounting Period", freq:2, unit:"U1-14"},
+  {en:"Receiving report", ja:"入庫報告書", cat:"Trans", sub:"Document", freq:3, unit:"U9-1"},
+  {en:"Recognition", ja:"認識", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-3"},
+  // Page 307 (S–V)
+  {en:"Statement of cash flows", ja:"キャッシュ・フロー計算書", cat:"FinStmt", sub:"Financial Statement", freq:1, unit:"U1-4"},
+  {en:"Statement of financial position", ja:"財政状態計算書", cat:"FinStmt", sub:"Financial Statement", freq:2, unit:"U1-4"},
+  {en:"Statement of stockholders' equity", ja:"株主持分計算書", cat:"FinStmt", sub:"Financial Statement", freq:2, unit:"U1-4"},
+  {en:"Statements of Financial Accounting Concepts", ja:"財務会計概念書", cat:"Org", sub:"Standard", freq:3, unit:"U1-10"},
+  {en:"Stock dividend", ja:"株式配当", cat:"Concept", sub:"Equity", freq:2, unit:"U9-8"},
+  {en:"Straight bonds", ja:"普通社債", cat:"BS-Liabilities", sub:"Noncurrent Liability", freq:2, unit:"U9-4"},
+  {en:"Subsequent measurement", ja:"事後測定", cat:"Concept", sub:"Measurement", freq:2, unit:"U5-3"},
+  {en:"Subsidiary account", ja:"補助勘定", cat:"Trans", sub:"Bookkeeping", freq:3, unit:"U5-7"},
+  {en:"Sum-of-the-years' digits method", ja:"級数法", cat:"Method", sub:"Depreciation", freq:2, unit:"U8-7"},
+  {en:"Supplier", ja:"仕入先", cat:"Org", sub:"Stakeholder", freq:2, unit:"U1-3"},
+  {en:"T-account", ja:"T勘定", cat:"Trans", sub:"Bookkeeping", freq:1, unit:"U5-6"},
+  {en:"Tax accounting", ja:"税務会計", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-10"},
+  {en:"Taxable income", ja:"課税所得", cat:"Concept", sub:"Income Statement", freq:2, unit:"U9-1"},
+  {en:"Time deposit", ja:"定期預金", cat:"Concept", sub:"Assets", freq:2, unit:"U9-3"},
+  {en:"Timeliness", ja:"適時性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Trade discount", ja:"業者割引", cat:"Concept", sub:"Revenue", freq:2, unit:"U7-2"},
+  {en:"Transaction", ja:"取引", cat:"Concept", sub:"Accounting", freq:1, unit:"U3-1, U5-2"},
+  {en:"Transactions and other events", ja:"取引その他の事象", cat:"Concept", sub:"Accounting", freq:2, unit:"U5-2"},
+  {en:"Transferability of stock", ja:"株式の譲渡性", cat:"Concept", sub:"Equity", freq:3, unit:"U1-4"},
+  {en:"Treasury bill", ja:"財務省短期証券", cat:"Concept", sub:"Assets", freq:2, unit:"U2-2"},
+  {en:"Treasury bill, note or bond", ja:"財務省証券", cat:"Concept", sub:"Assets", freq:2, unit:"U2-2"},
+  {en:"Treasury bond", ja:"財務省長期証券", cat:"Concept", sub:"Assets", freq:2, unit:"U2-2"},
+  {en:"Treasury note", ja:"財務省中期証券", cat:"Concept", sub:"Assets", freq:2, unit:"U2-2"},
+  {en:"Trial balance", ja:"試算表", cat:"Trans", sub:"Bookkeeping", freq:2, unit:"U5-9"},
+  {en:"Understandability", ja:"理解可能性", cat:"Concept", sub:"Qualitative Characteristic", freq:2, unit:"U1-1"},
+  {en:"Understatement", ja:"過少計上", cat:"Concept", sub:"Accounting", freq:2, unit:"U7-4"},
+  {en:"Undiscounted cash flows", ja:"割引前キャッシュ・フロー", cat:"Concept", sub:"Valuation", freq:3, unit:"U8-10"},
+  {en:"Units-of-production method", ja:"生産高比例法", cat:"Method", sub:"Depreciation", freq:2, unit:"U8-4, U8-5"},
+  {en:"Unmodified opinion", ja:"無修正意見", cat:"Org", sub:"Audit", freq:2, unit:"U1-4"},
+  {en:"Useful life", ja:"耐用年数", cat:"Concept", sub:"Fixed Assets", freq:2, unit:"U2-3, U8-3"},
+  {en:"Valuation", ja:"評価", cat:"Concept", sub:"Measurement", freq:2, unit:"U5-3"},
+  {en:"Value in use", ja:"使用価値", cat:"Concept", sub:"Valuation", freq:2, unit:"U8-10"},
+];
+
+const CAT_COLORS = {
+  "BS-Assets":"#4299e1","BS-Liabilities":"#ed8936","BS-Equity":"#9f7aea",
+  "IS-Revenue":"#48bb78","IS-Expenses":"#fc8181","IS-Gains":"#f6ad55",
+  "Concept":"#667eea","Method":"#38b2ac",
+  "Org":"#805ad5","FinStmt":"#3182ce",
+  "Trans":"#dd6b20","Ratio":"#d69e2e",
+};
+const CAT_LABELS = {
+  "BS-Assets":"資産 B/S","BS-Liabilities":"負債 B/S","BS-Equity":"資本 B/S",
+  "IS-Revenue":"収益 I/S","IS-Expenses":"費用 I/S","IS-Gains":"利得/損失 I/S",
+  "Concept":"会計概念","Method":"会計方法",
+  "Org":"組織・制度","FinStmt":"財務諸表",
+  "Trans":"取引・仕訳","Ratio":"財務指標",
+};
+const FREQ_LABELS = {1:"★★★ 頻出", 2:"★★☆ 標準", 3:"★☆☆ 発展"};
+const FREQ_COLORS = {1:"#c53030", 2:"#b7791f", 3:"#276749"};
+
+let currentFilter = 'all';
+let currentMode = 'flash';
+let reviewSet = new Set(); // manually curated by user
+
+// Flash state
+let deck = [], idx = 0, correct = 0, wrong = 0, flipped = false;
+// Input state
+let iDeck = [], iIdx = 0, iCorrect = 0, iWrong = 0, iChecked = false;
+let inputDir = 'ja-en'; // 'ja-en' or 'en-ja'
+let inputLimit = 0; // 0 = すべて
+// Quiz state
+let qDeck = [], qIdx = 0, qCorrect = 0, qWrong = 0, qAnswered = false;
+let quizDir = 'en-ja'; // 'en-ja' or 'ja-en'
+let quizLimit = 0; // 0 = すべて
+// Freq state
+let fDeck = [], fIdx = 0, fCorrect = 0, fWrong = 0, fFlipped = false;
+
+// ======== Review list ========
+function toggleReview(mode) {
+  const en = mode === 'flash' ? deck[idx].en
+           : mode === 'input' ? iDeck[iIdx].en
+           : mode === 'quiz'  ? qDeck[qIdx].en
+           : fDeck[fIdx].en;
+  if (reviewSet.has(en)) reviewSet.delete(en);
+  else reviewSet.add(en);
+  updateReviewBtn(mode, en);
+}
+
+function updateReviewBtn(mode, en) {
+  const ids = {flash:'flashReviewBtn', input:'inputReviewBtn', quiz:'quizReviewBtn', freq:'freqReviewBtn'};
+  const btn = document.getElementById(ids[mode]);
+  if (!btn) return;
+  const inReview = reviewSet.has(en);
+  btn.textContent = inReview ? '★ 復習リストから削除' : '☆ 復習リストに追加';
+  btn.classList.toggle('in-review', inReview);
+}
+
+function showReviewBtn(mode, en) {
+  const ids = {flash:'flashReviewBtn', input:'inputReviewBtn', quiz:'quizReviewBtn', freq:'freqReviewBtn'};
+  const btn = document.getElementById(ids[mode]);
+  if (!btn) return;
+  btn.style.display = 'inline-block';
+  updateReviewBtn(mode, en);
+}
+
+function hideReviewBtn(mode) {
+  const ids = {flash:'flashReviewBtn', input:'inputReviewBtn', quiz:'quizReviewBtn', freq:'freqReviewBtn'};
+  const btn = document.getElementById(ids[mode]);
+  if (btn) btn.style.display = 'none';
+}
+
+// ======== Helpers ========
+function getFilteredCards() {
+  if (currentFilter === 'all') return [...CARDS];
+  if (currentFilter === '復習') return CARDS.filter(c => reviewSet.has(c.en));
+  return CARDS.filter(c => c.cat === currentFilter);
+}
+
+// Normalize English for comparison
+function normEn(s) {
+  return s.trim().toLowerCase().replace(/\s+/g,' ').replace(/[()]/g,'').replace(/,/g,'');
+}
+
+// Normalize Japanese for comparison (strip parentheses, spaces)
+function normJa(s) {
+  return s.trim()
+    .replace(/（[^）]*）/g,'')
+    .replace(/\([^)]*\)/g,'')
+    .replace(/\s/g,'')
+    .replace(/・/g,'');
+}
+
+// All accepted Japanese answers for a card (synonym-aware, parentheses optional)
+function acceptedJaAnswers(card) {
+  const set = new Set();
+  const addVariants = (str) => {
+    set.add(str.trim());
+    set.add(normJa(str));
+    // each side of "/" is also valid
+    str.split('/').forEach(p => {
+      set.add(p.trim());
+      set.add(normJa(p));
+    });
+    // strip （反対勘定）etc
+    set.add(str.replace(/（[^）]*）/g,'').trim());
+  };
+  addVariants(card.ja);
+  // Also accept ja from any card with identical English base (same semantic group = same ja)
+  CARDS.filter(c => normJa(c.ja) === normJa(card.ja)).forEach(c => addVariants(c.ja));
+  return [...set].filter(s => s.length > 0);
+}
+
+// Pick n random wrong choices (different ja for en-ja quiz, different en for ja-en quiz)
+function pickWrongChoices(card, n, dir) {
+  const pool = CARDS.filter(c => {
+    if (dir === 'en-ja') return normJa(c.ja) !== normJa(card.ja);
+    return normEn(c.en) !== normEn(card.en);
+  });
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const seen = new Set();
+  const result = [];
+  for (const c of shuffled) {
+    const key = dir === 'en-ja' ? normJa(c.ja) : normEn(c.en);
+    if (!seen.has(key)) { seen.add(key); result.push(c); }
+    if (result.length >= n) break;
+  }
+  return result;
+}
+
+function setNoteEl(el, note) {
+  if (note) { el.textContent = note; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+// --- Share modal (open on phone via QR code) ---
+// "localhost"/"127.0.0.1" only resolves on this PC, so a phone can't use it.
+// Swap in this machine's LAN IP address so the link/QR works from other devices on the same Wi-Fi.
+const SHARE_LAN_IP = '192.168.32.155';
+
+function buildShareUrl() {
+  let url = window.location.href;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/i.test(url)) {
+    url = url.replace(/(localhost|127\.0\.0\.1)/i, SHARE_LAN_IP);
+  }
+  return url;
+}
+
+function openShareModal() {
+  const url = buildShareUrl();
+  const linkInput = document.getElementById('shareLinkInput');
+  const qrImg = document.getElementById('shareQrImg');
+  const copiedMsg = document.getElementById('shareCopiedMsg');
+  const noteEl = document.getElementById('shareNote');
+  linkInput.value = url;
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(url);
+  copiedMsg.textContent = '';
+  if (noteEl) {
+    noteEl.textContent = '※ スマホとPCが同じWi-Fiに接続されている必要があります。リンクが開けない場合は、PCのIPアドレスが変わっていないか確認してください。';
+  }
+  document.getElementById('shareOverlay').classList.add('open');
+}
+
+function closeShareModal() {
+  document.getElementById('shareOverlay').classList.remove('open');
+}
+
+function copyShareLink() {
+  const linkInput = document.getElementById('shareLinkInput');
+  const copiedMsg = document.getElementById('shareCopiedMsg');
+  linkInput.select();
+  const finish = () => { copiedMsg.textContent = '✓ コピーしました'; setTimeout(() => { copiedMsg.textContent = ''; }, 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(linkInput.value).then(finish).catch(() => { document.execCommand('copy'); finish(); });
+  } else {
+    document.execCommand('copy'); finish();
+  }
+}
+
+function setFilter(f, e) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  buildDeck();
+  if (currentMode === 'list') renderList();
+}
+
+function setMode(m) {
+  currentMode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const showFilter = (m !== 'freq');
+  document.getElementById('filterBar').style.display = showFilter ? 'flex' : 'none';
+  document.getElementById('flashView').classList.toggle('hidden', m !== 'flash');
+  document.getElementById('inputView').classList.toggle('active', m === 'input');
+  document.getElementById('quizView').classList.toggle('active', m === 'quiz');
+  document.getElementById('freqView').classList.toggle('active', m === 'freq');
+  document.getElementById('listView').classList.toggle('active', m === 'list');
+  if (m === 'freq') initFreqView();
+  else if (m === 'list') renderList();
+  else if (m === 'quiz') buildQuizDeck();
+}
+
+function applyLimit(cards, limit) {
+  return (limit > 0 && limit < cards.length) ? cards.slice(0, limit) : [...cards];
+}
+
+function buildDeck() {
+  deck = getFilteredCards(); idx = 0; correct = 0; wrong = 0;
+  iDeck = applyLimit(getFilteredCards(), inputLimit); iIdx = 0; iCorrect = 0; iWrong = 0;
+  renderCard(); updateStats();
+  renderInput(); updateIStats();
+  if (currentMode === 'quiz') buildQuizDeck();
+}
+
+// ======== Flashcard ========
+function renderCard() {
+  if (!deck.length) {
+    ['cardFrontMain','cardFrontSub','cardCategory','cardBackMain','cardBackSub','cardCategoryBack'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('cardFrontMain').textContent = '該当カードなし';
+    document.getElementById('progressText').textContent = '0 / 0';
+    document.getElementById('progressFill').style.width = '0%';
+    setNoteEl(document.getElementById('cardFrontNote'), null);
+    setNoteEl(document.getElementById('cardNote'), null);
+    return;
+  }
+  const c = deck[idx]; const col = CAT_COLORS[c.cat];
+  document.getElementById('card').classList.remove('flipped'); flipped = false;
+  document.getElementById('resultBtns').style.display = 'none';
+  ['cardCategory','cardCategoryBack'].forEach(id => { document.getElementById(id).textContent = CAT_LABELS[c.cat]; document.getElementById(id).style.color = col; });
+  document.getElementById('cardFrontMain').textContent = c.en;
+  document.getElementById('cardFrontSub').textContent = c.sub;
+  document.getElementById('cardBackMain').textContent = c.ja;
+  document.getElementById('cardBackSub').textContent = c.en;
+  setNoteEl(document.getElementById('cardFrontNote'), c.note);
+  setNoteEl(document.getElementById('cardNote'), c.note);
+  const unitEl = document.getElementById('cardUnit');
+  if (c.unit) { unitEl.textContent = '参照: ' + c.unit; unitEl.style.display = 'block'; }
+  else { unitEl.style.display = 'none'; }
+  const pct = deck.length > 1 ? (idx / (deck.length - 1)) * 100 : 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${idx + 1} / ${deck.length}`;
+  document.getElementById('btnPrev').disabled = idx === 0;
+  document.getElementById('btnNext').disabled = idx === deck.length - 1;
+}
+function flipCard() {
+  if (!deck.length) return;
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+  document.getElementById('resultBtns').style.display = flipped ? 'flex' : 'none';
+  if (flipped) showReviewBtn('flash', deck[idx].en);
+  else hideReviewBtn('flash');
+}
+function markResult(ok) {
+  const c = deck[idx];
+  if (ok) correct++; else { wrong++; reviewSet.add(c.en); }
+  updateStats();
+  hideReviewBtn('flash');
+  if (idx < deck.length - 1) { idx++; renderCard(); }
+  else { document.getElementById('cardFrontMain').textContent = '完了！'; document.getElementById('cardFrontSub').textContent = `覚えた ${correct} / 覚えてない ${wrong}`; document.getElementById('cardCategory').textContent = ''; document.getElementById('card').classList.remove('flipped'); document.getElementById('resultBtns').style.display = 'none'; }
+}
+function nextCard() { if (idx < deck.length - 1) { idx++; renderCard(); } }
+function prevCard() { if (idx > 0) { idx--; renderCard(); } }
+function shuffleFlash() {
+  for (let i = deck.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+  idx=0; correct=0; wrong=0; renderCard(); updateStats();
+}
+function updateStats() {
+  document.getElementById('statCorrect').textContent = correct;
+  document.getElementById('statWrong').textContent = wrong;
+  document.getElementById('statRemain').textContent = Math.max(0, deck.length - idx);
+}
+
+// ======== Input ========
+function setInputDir(dir) {
+  inputDir = dir;
+  document.getElementById('inputDirJaEn').classList.toggle('active', dir === 'ja-en');
+  document.getElementById('inputDirEnJa').classList.toggle('active', dir === 'en-ja');
+  document.getElementById('inputDirNote').textContent = dir === 'ja-en'
+    ? '日本語を見て英語を入力してください'
+    : '英語を見て日本語を入力してください（同義語はすべて正解）';
+  iDeck = applyLimit(getFilteredCards(), inputLimit); iIdx = 0; iCorrect = 0; iWrong = 0;
+  renderInput(); updateIStats();
+}
+
+function setInputLimit(val) {
+  inputLimit = parseInt(val);
+  iDeck = applyLimit(getFilteredCards(), inputLimit); iIdx = 0; iCorrect = 0; iWrong = 0;
+  renderInput(); updateIStats();
+}
+
+function renderInput() {
+  iChecked = false;
+  document.getElementById('iBtnNext').style.display = 'none';
+  const f = document.getElementById('iField');
+  f.value = ''; f.className = 'input-field';
+  document.getElementById('iFeedback').textContent = '';
+  document.getElementById('iFeedback').className = 'input-feedback';
+  document.getElementById('iAnswer').textContent = '';
+  if (!iDeck.length) {
+    document.getElementById('iQuestion').textContent = '該当カードなし';
+    document.getElementById('iQsub').textContent = '';
+    document.getElementById('iCardCategory').textContent = '';
+    document.getElementById('iProgressText').textContent = '0 / 0';
+    document.getElementById('iProgressFill').style.width = '0%';
+    setNoteEl(document.getElementById('iNoteHint'), null);
+    return;
+  }
+  const c = iDeck[iIdx];
+  document.getElementById('iCardCategory').textContent = CAT_LABELS[c.cat];
+  document.getElementById('iCardCategory').style.color = CAT_COLORS[c.cat];
+  if (inputDir === 'ja-en') {
+    document.getElementById('iQuestion').textContent = c.ja;
+    document.getElementById('iQsub').textContent = c.sub;
+    // In ja-en mode, show note as hint so user knows which English is expected
+    setNoteEl(document.getElementById('iNoteHint'), c.note);
+    f.placeholder = '英語で入力してください';
+  } else {
+    document.getElementById('iQuestion').textContent = c.en;
+    document.getElementById('iQsub').textContent = c.sub;
+    // In en-ja mode, no hint needed (synonyms all accepted)
+    setNoteEl(document.getElementById('iNoteHint'), null);
+    f.placeholder = '日本語で入力してください（同義語もすべて正解）';
+  }
+  const pct = iDeck.length > 1 ? (iIdx / (iDeck.length - 1)) * 100 : 100;
+  document.getElementById('iProgressFill').style.width = pct + '%';
+  document.getElementById('iProgressText').textContent = `${iIdx + 1} / ${iDeck.length}`;
+  f.focus(); updateIStats();
+}
+
+function checkInput() {
+  if (iChecked || !iDeck.length) return;
+  iChecked = true;
+  const c = iDeck[iIdx];
+  const input = document.getElementById('iField').value;
+  let ok = false;
+  if (inputDir === 'ja-en') {
+    ok = normEn(input) === normEn(c.en);
+  } else {
+    // Japanese input: accept all synonym variants
+    const accepted = acceptedJaAnswers(c);
+    const normInput = normJa(input);
+    ok = accepted.some(a => normJa(a) === normInput || a === input.trim());
+  }
+  document.getElementById('iField').className = 'input-field ' + (ok ? 'correct' : 'incorrect');
+  const fb = document.getElementById('iFeedback');
+  fb.textContent = ok ? '正解！' : '不正解';
+  fb.className = 'input-feedback ' + (ok ? 'ok' : 'ng');
+  if (!ok) {
+    const ans = inputDir === 'ja-en' ? c.en : c.ja;
+    document.getElementById('iAnswer').textContent = `正解: ${ans}${c.unit ? ' ／ 参照: ' + c.unit : ''}`;
+  }
+  if (ok) iCorrect++; else iWrong++;
+  updateIStats();
+  document.getElementById('iBtnNext').style.display = 'inline-block';
+  showReviewBtn('input', c.en);
+}
+
+function nextInput() {
+  hideReviewBtn('input');
+  if (iIdx < iDeck.length - 1) { iIdx++; renderInput(); }
+  else {
+    document.getElementById('iQuestion').textContent = '完了！';
+    document.getElementById('iQsub').textContent = `正解 ${iCorrect} / 不正解 ${iWrong}`;
+    document.getElementById('iCardCategory').textContent = '';
+    document.getElementById('iField').style.display = 'none';
+    document.getElementById('iFeedback').textContent = '';
+    document.getElementById('iAnswer').textContent = '';
+    document.getElementById('iBtnNext').style.display = 'none';
+    setNoteEl(document.getElementById('iNoteHint'), null);
+  }
+}
+function skipInput() {
+  if (!iDeck.length) return;
+  iWrong++;
+  updateIStats();
+  if (iIdx < iDeck.length - 1) { iIdx++; renderInput(); } else nextInput();
+}
+function shuffleInput() {
+  for (let i=iDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[iDeck[i],iDeck[j]]=[iDeck[j],iDeck[i]];}
+  iIdx=0;iCorrect=0;iWrong=0;renderInput();updateIStats();
+}
+function updateIStats() {
+  document.getElementById('iStatCorrect').textContent = iCorrect;
+  document.getElementById('iStatWrong').textContent = iWrong;
+  document.getElementById('iStatRemain').textContent = Math.max(0, iDeck.length - iIdx);
+}
+
+// ======== Quiz ========
+function setQuizDir(dir) {
+  quizDir = dir;
+  document.getElementById('quizDirEnJa').classList.toggle('active', dir === 'en-ja');
+  document.getElementById('quizDirJaEn').classList.toggle('active', dir === 'ja-en');
+  buildQuizDeck();
+}
+
+function setQuizLimit(val) {
+  quizLimit = parseInt(val);
+  buildQuizDeck();
+}
+
+function buildQuizDeck() {
+  qDeck = applyLimit(getFilteredCards(), quizLimit); qIdx = 0; qCorrect = 0; qWrong = 0; qAnswered = false;
+  renderQuiz(); updateQStats();
+}
+
+function renderQuiz() {
+  qAnswered = false;
+  document.getElementById('qBtnNext').style.display = 'none';
+  document.getElementById('qFeedback').textContent = '';
+  document.getElementById('qFeedback').className = 'quiz-feedback';
+  document.getElementById('qNote').style.display = 'none';
+  if (!qDeck.length) {
+    document.getElementById('qQuestion').textContent = '該当カードなし';
+    document.getElementById('qChoices').innerHTML = '';
+    document.getElementById('qProgressText').textContent = '0 / 0';
+    document.getElementById('qProgressFill').style.width = '0%';
+    setNoteEl(document.getElementById('qNoteHint'), null);
+    return;
+  }
+  const c = qDeck[qIdx];
+  const col = CAT_COLORS[c.cat];
+  document.getElementById('qCardCategory').textContent = CAT_LABELS[c.cat];
+  document.getElementById('qCardCategory').style.color = col;
+
+  if (quizDir === 'en-ja') {
+    document.getElementById('qQuestion').textContent = c.en;
+    document.getElementById('qQsub').textContent = c.sub;
+    // Show note on question side for en-ja (helps identify which Japanese)
+    setNoteEl(document.getElementById('qNoteHint'), c.note);
+  } else {
+    document.getElementById('qQuestion').textContent = c.ja;
+    document.getElementById('qQsub').textContent = c.sub;
+    // In ja-en mode, show note so user knows which English is expected
+    setNoteEl(document.getElementById('qNoteHint'), c.note);
+  }
+
+  // Build 4 choices
+  const wrongs = pickWrongChoices(c, 3, quizDir);
+  const choices = [c, ...wrongs].sort(() => Math.random() - 0.5);
+  const choicesEl = document.getElementById('qChoices');
+  choicesEl.innerHTML = '';
+  choices.forEach(ch => {
+    const label = quizDir === 'en-ja' ? ch.ja : ch.en;
+    const btn = document.createElement('button');
+    btn.className = 'quiz-choice';
+    btn.textContent = label;
+    btn.onclick = () => selectChoice(btn, c, ch, quizDir);
+    choicesEl.appendChild(btn);
+  });
+
+  const pct = qDeck.length > 1 ? (qIdx / (qDeck.length - 1)) * 100 : 100;
+  document.getElementById('qProgressFill').style.width = pct + '%';
+  document.getElementById('qProgressText').textContent = `${qIdx + 1} / ${qDeck.length}`;
+  updateQStats();
+}
+
+function selectChoice(btn, correctCard, selectedCard, dir) {
+  if (qAnswered) return;
+  qAnswered = true;
+  // Determine correctness
+  let ok;
+  if (dir === 'en-ja') {
+    ok = normJa(selectedCard.ja) === normJa(correctCard.ja);
+  } else {
+    ok = normEn(selectedCard.en) === normEn(correctCard.en);
+  }
+  // Style all buttons
+  const allBtns = document.getElementById('qChoices').querySelectorAll('.quiz-choice');
+  allBtns.forEach(b => {
+    b.disabled = true;
+    const bLabel = b.textContent;
+    const correctLabel = dir === 'en-ja' ? correctCard.ja : correctCard.en;
+    if (bLabel === btn.textContent && ok) b.className = 'quiz-choice selected-correct';
+    else if (bLabel === btn.textContent && !ok) b.className = 'quiz-choice selected-wrong';
+    else if (bLabel === correctLabel) b.className = 'quiz-choice reveal-correct';
+  });
+  const fb = document.getElementById('qFeedback');
+  fb.textContent = ok ? '正解！' : '不正解';
+  fb.className = 'quiz-feedback ' + (ok ? 'ok' : 'ng');
+  // Show note on answer
+  if (correctCard.note) {
+    const noteEl = document.getElementById('qNote');
+    noteEl.textContent = correctCard.note;
+    noteEl.style.display = 'block';
+  }
+  if (ok) qCorrect++; else qWrong++;
+  updateQStats();
+  document.getElementById('qBtnNext').style.display = 'inline-block';
+  showReviewBtn('quiz', correctCard.en);
+}
+
+function nextQuiz() {
+  hideReviewBtn('quiz');
+  if (qIdx < qDeck.length - 1) { qIdx++; renderQuiz(); }
+  else {
+    document.getElementById('qQuestion').textContent = '完了！';
+    document.getElementById('qQsub').textContent = `正解 ${qCorrect} / 不正解 ${qWrong}`;
+    document.getElementById('qCardCategory').textContent = '';
+    document.getElementById('qChoices').innerHTML = '';
+    document.getElementById('qFeedback').textContent = '';
+    document.getElementById('qNote').style.display = 'none';
+    document.getElementById('qBtnNext').style.display = 'none';
+    setNoteEl(document.getElementById('qNoteHint'), null);
+  }
+}
+function shuffleQuiz() {
+  for (let i=qDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qDeck[i],qDeck[j]]=[qDeck[j],qDeck[i]];}
+  qIdx=0;qCorrect=0;qWrong=0;renderQuiz();updateQStats();
+}
+function updateQStats() {
+  document.getElementById('qStatCorrect').textContent = qCorrect;
+  document.getElementById('qStatWrong').textContent = qWrong;
+  document.getElementById('qStatRemain').textContent = Math.max(0, qDeck.length - qIdx);
+}
+
+// ======== Frequency ========
+function initFreqView() {
+  document.getElementById('freqSelector').style.display = 'flex';
+  document.getElementById('freqSession').classList.remove('active');
+  document.getElementById('freqCount1').textContent = CARDS.filter(c=>c.freq===1).length + '語';
+  document.getElementById('freqCount2').textContent = CARDS.filter(c=>c.freq===2).length + '語';
+  document.getElementById('freqCount3').textContent = CARDS.filter(c=>c.freq===3).length + '語';
+  document.getElementById('freqCountAll').textContent = CARDS.length + '語';
+}
+function startFreqSession(level) {
+  fDeck = level === 0 ? [...CARDS].sort((a,b)=>a.freq-b.freq) : CARDS.filter(c=>c.freq===level);
+  fIdx=0; fCorrect=0; fWrong=0; fFlipped=false;
+  document.getElementById('freqSelector').style.display = 'none';
+  document.getElementById('freqSession').classList.add('active');
+  const h = {0:'全レベル（頻度順）',1:'★★★ 頻出',2:'★★☆ 標準',3:'★☆☆ 発展'};
+  document.getElementById('freqSessionHeader').textContent = h[level] + ` — ${fDeck.length}語`;
+  renderFreqCard();
+}
+function backToFreqSelector() {
+  document.getElementById('freqSession').classList.remove('active');
+  document.getElementById('freqSelector').style.display = 'flex';
+}
+function renderFreqCard() {
+  if (!fDeck.length) return;
+  const c = fDeck[fIdx]; const col = CAT_COLORS[c.cat];
+  document.getElementById('fCard').classList.remove('flipped'); fFlipped=false;
+  document.getElementById('fResultBtns').style.display = 'none';
+  ['fCardCategory','fCardCategoryBack'].forEach(id=>{document.getElementById(id).textContent=CAT_LABELS[c.cat];document.getElementById(id).style.color=col;});
+  document.getElementById('fCardFrontMain').textContent = c.en;
+  document.getElementById('fCardFrontSub').textContent = c.sub;
+  document.getElementById('fCardBackMain').textContent = c.ja;
+  document.getElementById('fCardBackSub').textContent = c.en;
+  setNoteEl(document.getElementById('fCardFrontNote'), c.note);
+  setNoteEl(document.getElementById('fCardNote'), c.note);
+  const fUnitEl = document.getElementById('fCardUnit');
+  if (c.unit) { fUnitEl.textContent = '参照: ' + c.unit; fUnitEl.style.display = 'block'; }
+  else { fUnitEl.style.display = 'none'; }
+  document.getElementById('fFreqBadge').innerHTML = `<span class="freq-badge" style="background:${FREQ_COLORS[c.freq]}">${FREQ_LABELS[c.freq]}</span>`;
+  const pct = fDeck.length > 1 ? (fIdx/(fDeck.length-1))*100 : 100;
+  document.getElementById('fProgressFill').style.width = pct+'%';
+  document.getElementById('fProgressFill').style.background = FREQ_COLORS[c.freq];
+  document.getElementById('fProgressText').textContent = `${fIdx+1} / ${fDeck.length}`;
+  document.getElementById('fBtnPrev').disabled = fIdx===0;
+  document.getElementById('fBtnNext').disabled = fIdx===fDeck.length-1;
+  updateFStats();
+}
+function flipFreqCard() {
+  if (!fDeck.length) return;
+  fFlipped=!fFlipped;
+  document.getElementById('fCard').classList.toggle('flipped',fFlipped);
+  document.getElementById('fResultBtns').style.display=fFlipped?'flex':'none';
+  if (fFlipped) showReviewBtn('freq', fDeck[fIdx].en);
+  else hideReviewBtn('freq');
+}
+function markFreqResult(ok) {
+  const c=fDeck[fIdx];
+  if(ok) fCorrect++; else { fWrong++; reviewSet.add(c.en); }
+  updateFStats();
+  hideReviewBtn('freq');
+  if(fIdx<fDeck.length-1){fIdx++;renderFreqCard();}
+  else{document.getElementById('fCardFrontMain').textContent='完了！';document.getElementById('fCardFrontSub').textContent=`覚えた ${fCorrect} / 要復習 ${fWrong}`;document.getElementById('fCardCategory').textContent='';document.getElementById('fCard').classList.remove('flipped');document.getElementById('fResultBtns').style.display='none';}
+}
+function nextFreqCard(){if(fIdx<fDeck.length-1){fIdx++;renderFreqCard();}}
+function prevFreqCard(){if(fIdx>0){fIdx--;renderFreqCard();}}
+function shuffleFreq(){
+  for(let i=fDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fDeck[i],fDeck[j]]=[fDeck[j],fDeck[i]];}
+  fIdx=0;fCorrect=0;fWrong=0;renderFreqCard();
+}
+function updateFStats(){
+  document.getElementById('fStatCorrect').textContent=fCorrect;
+  document.getElementById('fStatWrong').textContent=fWrong;
+  document.getElementById('fStatRemain').textContent=Math.max(0,fDeck.length-fIdx);
+}
+
+// ======== List ========
+function renderList() {
+  const src = getFilteredCards();
+  document.getElementById('listBody').innerHTML = src.map(c => {
+    const col = CAT_COLORS[c.cat]||'#888';
+    const inReview = reviewSet.has(c.en);
+    return `<tr style="${inReview?'background:#fff5f5':''}">
+      <td><strong>${c.en}</strong><br><small style="color:#a0aec0">${c.sub}</small></td>
+      <td>${c.ja}${c.note?`<br><small style="color:#b7791f;font-size:0.75rem">${c.note}</small>`:''}${c.unit ? '<br><small style="color:#a0aec0;font-size:0.72rem">参照: '+c.unit+'</small>' : ''}</td>
+      <td><span class="cat-badge" style="background:${col}">${CAT_LABELS[c.cat]}</span>${inReview?' <span style="color:#fc8181;font-size:0.72rem">復習</span>':''}</td>
+      <td><span class="freq-badge" style="background:${FREQ_COLORS[c.freq]}">${FREQ_LABELS[c.freq]}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+buildDeck();
+buildQuizDeck();
+</script>
+</body>
+</html>
