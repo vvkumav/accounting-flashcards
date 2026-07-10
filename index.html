@@ -957,6 +957,7 @@ let quizDir = 'en-ja'; // 'en-ja' or 'ja-en'
 let quizLimit = 0; // 0 = すべて
 // Freq state
 let fDeck = [], fIdx = 0, fCorrect = 0, fWrong = 0, fFlipped = false;
+let freqLimit = 0; // 0 = すべて
 
 // ======== Review list ========
 function toggleReview(mode) {
@@ -1445,8 +1446,12 @@ function initFreqView() {
   document.getElementById('freqCount3').textContent = CARDS.filter(c=>c.freq===3).length + '語';
   document.getElementById('freqCountAll').textContent = CARDS.length + '語';
 }
+function setFreqLimit(val) {
+  freqLimit = parseInt(val);
+}
 function startFreqSession(level) {
-  fDeck = level === 0 ? [...CARDS].sort((a,b)=>a.freq-b.freq) : CARDS.filter(c=>c.freq===level);
+  const pool = level === 0 ? [...CARDS].sort((a,b)=>a.freq-b.freq) : CARDS.filter(c=>c.freq===level);
+  fDeck = applyLimit(pool, freqLimit);
   fIdx=0; fCorrect=0; fWrong=0; fFlipped=false;
   document.getElementById('freqSelector').style.display = 'none';
   document.getElementById('freqSession').classList.add('active');
