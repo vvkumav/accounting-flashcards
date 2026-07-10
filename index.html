@@ -32,6 +32,20 @@
   .share-close-btn:hover { color: #4a5568; }
   .share-note { font-size: 0.7rem; color: #a0aec0; margin-top: 6px; line-height: 1.4; text-align: left; }
 
+  /* Word detail panel (shown after answering) */
+  .word-detail { display: none; margin-top: 14px; padding: 14px 16px; background: #f7f5ff; border: 2px solid #d6c9f5; border-radius: 12px; text-align: left; }
+  .word-detail.show { display: block; }
+  .word-detail .wd-term { font-size: 1.02rem; font-weight: bold; color: #44337a; margin-bottom: 2px; }
+  .word-detail .wd-ja { font-size: 0.88rem; color: #2d3748; font-weight: bold; margin-bottom: 8px; }
+  .word-detail .wd-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .word-detail .wd-tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #e9d8fd; color: #553c9a; font-weight: bold; }
+  .word-detail .wd-tag.freq1 { background: #fed7d7; color: #c53030; }
+  .word-detail .wd-tag.freq2 { background: #fefcbf; color: #b7791f; }
+  .word-detail .wd-tag.freq3 { background: #c6f6d5; color: #276749; }
+  .word-detail .wd-note { font-size: 0.78rem; color: #4a5568; line-height: 1.5; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #cbd5e0; }
+  .word-detail .wd-uscpa { font-size: 0.8rem; color: #2d3748; line-height: 1.6; }
+  .word-detail .wd-uscpa::before { content: "🎓 USCPAポイント: "; font-weight: bold; color: #6b46c1; }
+
   /* Mode tabs */
   .mode-bar { display: flex; gap: 0; margin-bottom: 14px; border-radius: 12px; overflow: hidden; border: 2px solid #9f7aea; flex-wrap: wrap; }
   .mode-btn { padding: 8px 14px; border: none; background: #fff; cursor: pointer; font-size: 0.8rem; color: #553c9a; font-weight: bold; transition: all 0.2s; }
@@ -312,6 +326,7 @@
       onkeydown="if(event.key==='Enter')checkInput()">
     <div class="input-feedback" id="iFeedback"></div>
     <div class="input-answer" id="iAnswer"></div>
+    <div class="word-detail" id="iDetail"></div>
   </div>
   <div class="controls">
     <button class="btn btn-check" onclick="checkInput()">答え合わせ</button>
@@ -356,6 +371,7 @@
     <div class="quiz-choices" id="qChoices"></div>
     <div class="quiz-feedback" id="qFeedback"></div>
     <div class="quiz-note" id="qNote"></div>
+    <div class="word-detail" id="qDetail"></div>
   </div>
   <div class="controls">
     <button class="btn btn-next" id="qBtnNext" onclick="nextQuiz()" style="display:none">次へ ▶</button>
