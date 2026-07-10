@@ -1045,14 +1045,14 @@ function setNoteEl(el, note) {
 }
 
 // --- Share modal (open on phone via QR code) ---
-// "localhost"/"127.0.0.1" only resolves on this PC, so a phone can't use it.
-// Swap in this machine's LAN IP address so the link/QR works from other devices on the same Wi-Fi.
-const SHARE_LAN_IP = '192.168.32.155';
+// Permanent public URL (GitHub Pages, auto-deployed on every update).
+// Local/LAN preview URLs can't be reached from outside, so always share this one.
+const SHARE_PUBLIC_URL = 'https://vvkumav.github.io/accounting-flashcards/';
 
 function buildShareUrl() {
-  let url = window.location.href;
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/i.test(url)) {
-    url = url.replace(/(localhost|127\.0\.0\.1)/i, SHARE_LAN_IP);
+  const url = window.location.href;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.)/i.test(url)) {
+    return SHARE_PUBLIC_URL;
   }
   return url;
 }
