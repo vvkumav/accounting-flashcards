@@ -17,6 +17,10 @@
   /* Share button & modal */
   .share-btn { position: fixed; top: 14px; right: 14px; padding: 8px 14px; border-radius: 20px; border: 2px solid #9f7aea; background: #fff; color: #553c9a; font-weight: bold; font-size: 0.78rem; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 50; }
   .share-btn:hover { background: #9f7aea; color: #fff; }
+  /* On narrow screens the fixed button overlaps the title — put it in the normal flow instead */
+  @media (max-width: 620px) {
+    .share-btn { position: static; display: block; margin: 0 auto 10px; }
+  }
   .share-overlay { display: none; position: fixed; inset: 0; background: rgba(45,55,72,0.55); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
   .share-overlay.open { display: flex; }
   .share-modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.25); position: relative; }
@@ -45,6 +49,28 @@
   .word-detail .wd-note { font-size: 0.78rem; color: #4a5568; line-height: 1.5; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #cbd5e0; }
   .word-detail .wd-uscpa { font-size: 0.8rem; color: #2d3748; line-height: 1.6; }
   .word-detail .wd-uscpa::before { content: "🎓 USCPAポイント: "; font-weight: bold; color: #6b46c1; }
+
+  /* Study log view */
+  .log-view { display: none; width: 100%; max-width: 700px; }
+  .log-view.active { display: block; }
+  .log-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .log-tile { background: #fff; border-radius: 14px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .log-tile .lt-value { font-size: 1.5rem; font-weight: bold; color: #553c9a; }
+  .log-tile .lt-label { font-size: 0.72rem; color: #718096; margin-top: 4px; }
+  .log-total { font-size: 0.78rem; color: #718096; text-align: center; margin-bottom: 16px; }
+  .log-history { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .log-history h3 { font-size: 0.9rem; color: #2d3748; margin-bottom: 10px; }
+  .log-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #edf2f7; font-size: 0.78rem; }
+  .log-row:last-child { border-bottom: none; }
+  .log-row .lr-date { width: 90px; color: #4a5568; font-weight: bold; flex-shrink: 0; }
+  .log-row .lr-bar-wrap { flex: 1; background: #edf2f7; border-radius: 6px; height: 14px; overflow: hidden; }
+  .log-row .lr-bar { height: 100%; background: linear-gradient(90deg, #9f7aea, #667eea); border-radius: 6px; }
+  .log-row .lr-nums { width: 150px; text-align: right; color: #718096; flex-shrink: 0; }
+  .log-empty { text-align: center; color: #a0aec0; font-size: 0.85rem; padding: 20px 0; }
+  .log-reset-btn { display: block; margin: 16px auto 0; padding: 6px 16px; border-radius: 8px; border: 2px solid #e2e8f0; background: #fff; color: #a0aec0; font-size: 0.72rem; cursor: pointer; }
+  .log-reset-btn:hover { border-color: #fc8181; color: #c53030; }
+
+  .build-info { margin-top: 26px; font-size: 0.66rem; color: #a0aec0; text-align: center; }
 
   /* Mode tabs */
   .mode-bar { display: flex; gap: 0; margin-bottom: 14px; border-radius: 12px; overflow: hidden; border: 2px solid #9f7aea; flex-wrap: wrap; }
@@ -227,6 +253,7 @@
   <button class="mode-btn" onclick="setMode('quiz')">四択問題</button>
   <button class="mode-btn" onclick="setMode('freq')">頻度別</button>
   <button class="mode-btn" onclick="setMode('list')">一覧</button>
+  <button class="mode-btn" onclick="setMode('log')">学習記録</button>
 </div>
 
 <div class="filter-bar" id="filterBar">
@@ -475,6 +502,22 @@
     <thead><tr><th>英語</th><th>日本語</th><th>カテゴリ</th><th>頻度</th></tr></thead>
     <tbody id="listBody"></tbody>
   </table>
+</div>
+
+<!-- ===== Study log ===== -->
+<div class="log-view" id="logView">
+  <div class="log-summary">
+    <div class="log-tile"><div class="lt-value" id="logTodayFlips">0</div><div class="lt-label">今日めくった枚数</div></div>
+    <div class="log-tile"><div class="lt-value" id="logTodayAns">0</div><div class="lt-label">今日の回答数</div></div>
+    <div class="log-tile"><div class="lt-value" id="logTodayRate">-</div><div class="lt-label">今日の正解率</div></div>
+    <div class="log-tile"><div class="lt-value" id="logStreak">0</div><div class="lt-label">連続学習日数</div></div>
+  </div>
+  <div class="log-total" id="logTotal"></div>
+  <div class="log-history">
+    <h3>📅 日別の学習履歴（直近30日）</h3>
+    <div id="logHistoryBody"></div>
+  </div>
+  <button class="log-reset-btn" onclick="resetStudyLog()">学習記録をリセット</button>
 </div>
 
 <script>
@@ -959,7 +1002,37 @@ const FREQ_COLORS = {1:"#c53030", 2:"#b7791f", 3:"#276749"};
 
 let currentFilter = 'all';
 let currentMode = 'flash';
-let reviewSet = new Set(); // manually curated by user
+
+// ======== Persistence (localStorage) ========
+const LS_LOG_KEY = 'acctFlash.studyLog';
+const LS_REVIEW_KEY = 'acctFlash.reviewList';
+
+function lsLoad(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; }
+  catch (e) { return fallback; }
+}
+function lsSave(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* storage unavailable */ }
+}
+
+let reviewSet = new Set(lsLoad(LS_REVIEW_KEY, [])); // persisted across sessions
+function saveReviewList() { lsSave(LS_REVIEW_KEY, [...reviewSet]); }
+
+// studyLog: { "YYYY-MM-DD": { flip: n, ans: n, ok: n, ng: n } }
+let studyLog = lsLoad(LS_LOG_KEY, {});
+
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function logStudy(kind, ok) {
+  const k = todayKey();
+  const e = studyLog[k] || (studyLog[k] = { flip: 0, ans: 0, ok: 0, ng: 0 });
+  if (kind === 'flip') e.flip++;
+  else { e.ans++; if (ok) e.ok++; else e.ng++; }
+  lsSave(LS_LOG_KEY, studyLog);
+}
 
 // Flash state
 let deck = [], idx = 0, correct = 0, wrong = 0, flipped = false;
@@ -983,6 +1056,7 @@ function toggleReview(mode) {
            : fDeck[fIdx].en;
   if (reviewSet.has(en)) reviewSet.delete(en);
   else reviewSet.add(en);
+  saveReviewList();
   updateReviewBtn(mode, en);
 }
 
@@ -1589,16 +1663,70 @@ function setMode(m) {
   currentMode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
-  const showFilter = (m !== 'freq');
+  const showFilter = (m !== 'freq' && m !== 'log');
   document.getElementById('filterBar').style.display = showFilter ? 'flex' : 'none';
   document.getElementById('flashView').classList.toggle('hidden', m !== 'flash');
   document.getElementById('inputView').classList.toggle('active', m === 'input');
   document.getElementById('quizView').classList.toggle('active', m === 'quiz');
   document.getElementById('freqView').classList.toggle('active', m === 'freq');
   document.getElementById('listView').classList.toggle('active', m === 'list');
+  document.getElementById('logView').classList.toggle('active', m === 'log');
   if (m === 'freq') initFreqView();
   else if (m === 'list') renderList();
   else if (m === 'quiz') buildQuizDeck();
+  else if (m === 'log') renderStudyLog();
+}
+
+// ======== Study log view ========
+function renderStudyLog() {
+  const tk = todayKey();
+  const today = studyLog[tk] || { flip: 0, ans: 0, ok: 0, ng: 0 };
+  document.getElementById('logTodayFlips').textContent = today.flip;
+  document.getElementById('logTodayAns').textContent = today.ans;
+  document.getElementById('logTodayRate').textContent = today.ans > 0 ? Math.round(today.ok / today.ans * 100) + '%' : '-';
+
+  // Streak: consecutive days with activity, counting back from today (or yesterday if today is untouched)
+  let streak = 0;
+  const d = new Date();
+  if (!studyLog[tk]) d.setDate(d.getDate() - 1);
+  while (true) {
+    const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    if (studyLog[k]) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  document.getElementById('logStreak').textContent = streak;
+
+  // Totals
+  const days = Object.keys(studyLog);
+  let tFlip = 0, tAns = 0, tOk = 0;
+  days.forEach(k => { tFlip += studyLog[k].flip; tAns += studyLog[k].ans; tOk += studyLog[k].ok; });
+  document.getElementById('logTotal').textContent = days.length > 0
+    ? `累計: ${days.length}日学習 ／ めくり ${tFlip}枚 ／ 回答 ${tAns}問（正解率 ${tAns > 0 ? Math.round(tOk / tAns * 100) : 0}%）`
+    : '';
+
+  // History (last 30 days with activity, newest first)
+  const body = document.getElementById('logHistoryBody');
+  const sorted = days.sort().reverse().slice(0, 30);
+  if (!sorted.length) {
+    body.innerHTML = '<div class="log-empty">まだ記録がありません。カードをめくったり問題に回答すると自動で記録されます。</div>';
+    return;
+  }
+  const maxTotal = Math.max(...sorted.map(k => studyLog[k].flip + studyLog[k].ans), 1);
+  body.innerHTML = sorted.map(k => {
+    const e = studyLog[k];
+    const total = e.flip + e.ans;
+    const pct = Math.max(3, Math.round(total / maxTotal * 100));
+    const rate = e.ans > 0 ? Math.round(e.ok / e.ans * 100) + '%' : '-';
+    const label = k === tk ? k + '（今日）' : k;
+    return `<div class="log-row"><div class="lr-date">${label}</div><div class="lr-bar-wrap"><div class="lr-bar" style="width:${pct}%"></div></div><div class="lr-nums">めくり${e.flip} / 回答${e.ans} / ${rate}</div></div>`;
+  }).join('');
+}
+
+function resetStudyLog() {
+  if (!confirm('学習記録をすべて削除しますか？（復習リストは残ります）')) return;
+  studyLog = {};
+  lsSave(LS_LOG_KEY, studyLog);
+  renderStudyLog();
 }
 
 function applyLimit(cards, limit) {
@@ -1648,12 +1776,13 @@ function flipCard() {
   flipped = !flipped;
   document.getElementById('card').classList.toggle('flipped', flipped);
   document.getElementById('resultBtns').style.display = flipped ? 'flex' : 'none';
-  if (flipped) showReviewBtn('flash', deck[idx].en);
+  if (flipped) { showReviewBtn('flash', deck[idx].en); logStudy('flip'); }
   else hideReviewBtn('flash');
 }
 function markResult(ok) {
   const c = deck[idx];
-  if (ok) correct++; else { wrong++; reviewSet.add(c.en); }
+  if (ok) correct++; else { wrong++; reviewSet.add(c.en); saveReviewList(); }
+  logStudy('ans', ok);
   updateStats();
   hideReviewBtn('flash');
   if (idx < deck.length - 1) { idx++; renderCard(); }
@@ -1752,6 +1881,7 @@ function checkInput() {
     document.getElementById('iAnswer').textContent = `正解: ${ans}${c.unit ? ' ／ 参照: ' + c.unit : ''}`;
   }
   if (ok) iCorrect++; else iWrong++;
+  logStudy('ans', ok);
   updateIStats();
   document.getElementById('iBtnNext').style.display = 'inline-block';
   showReviewBtn('input', c.en);
@@ -1775,6 +1905,7 @@ function nextInput() {
 function skipInput() {
   if (!iDeck.length) return;
   iWrong++;
+  logStudy('ans', false);
   updateIStats();
   if (iIdx < iDeck.length - 1) { iIdx++; renderInput(); } else nextInput();
 }
@@ -1882,6 +2013,7 @@ function selectChoice(btn, correctCard, selectedCard, dir) {
   fb.textContent = ok ? '正解！' : '不正解';
   fb.className = 'quiz-feedback ' + (ok ? 'ok' : 'ng');
   if (ok) qCorrect++; else qWrong++;
+  logStudy('ans', ok);
   updateQStats();
   document.getElementById('qBtnNext').style.display = 'inline-block';
   showReviewBtn('quiz', correctCard.en);
@@ -1967,12 +2099,13 @@ function flipFreqCard() {
   fFlipped=!fFlipped;
   document.getElementById('fCard').classList.toggle('flipped',fFlipped);
   document.getElementById('fResultBtns').style.display=fFlipped?'flex':'none';
-  if (fFlipped) showReviewBtn('freq', fDeck[fIdx].en);
+  if (fFlipped) { showReviewBtn('freq', fDeck[fIdx].en); logStudy('flip'); }
   else hideReviewBtn('freq');
 }
 function markFreqResult(ok) {
   const c=fDeck[fIdx];
-  if(ok) fCorrect++; else { fWrong++; reviewSet.add(c.en); }
+  if(ok) fCorrect++; else { fWrong++; reviewSet.add(c.en); saveReviewList(); }
+  logStudy('ans', ok);
   updateFStats();
   hideReviewBtn('freq');
   if(fIdx<fDeck.length-1){fIdx++;renderFreqCard();}
@@ -2007,7 +2140,14 @@ function renderList() {
 
 buildDeck();
 buildQuizDeck();
+
+// Build stamp: "2026-07-17 12:31:30" is replaced with the deploy timestamp by watch-and-deploy.ps1
+window.addEventListener('DOMContentLoaded', function(){
+  const el = document.getElementById('buildStamp');
+  if (el && el.textContent === '2026-07-17 12:31:30') el.textContent = 'ローカル編集版';
+});
 </script>
+<p class="build-info">最終更新: <span id="buildStamp">2026-07-17 12:31:30</span></p>
 </body>
 </html>
 
